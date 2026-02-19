@@ -208,13 +208,13 @@ export default function ProfitPage() {
             });
 
             // Styling (Blue Header, Bold, Borders)
-            const headerFill: ExcelJS.Fill = {
+            const headerFill: Partial<ExcelJS.Fill> = {
                 type: 'pattern',
                 pattern: 'solid',
                 fgColor: { argb: 'FF00B0F0' } // Cyan/Blue like image
             };
-            const fontBold: ExcelJS.Font = { bold: true, name: 'Arial', size: 10 };
-            const borderStyle: ExcelJS.Borders = {
+            const fontBold: Partial<ExcelJS.Font> = { bold: true, name: 'Arial', size: 10 };
+            const borderStyle: Partial<ExcelJS.Borders> = {
                 top: { style: 'thin' },
                 left: { style: 'thin' },
                 bottom: { style: 'thin' },
