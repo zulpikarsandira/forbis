@@ -9,10 +9,10 @@ import {
     TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { BadgeCheck, AlertTriangle, XCircle, Edit, Trash2, Eye, Loader2 } from "lucide-react";
-import { type Product, deleteProduct } from "@/lib/actions/products";
+import { BadgeCheck, AlertTriangle, XCircle, Edit, Trash2, Eye, Loader2, X } from "lucide-react";
+import { type Product, deleteProduct, bulkDeleteProducts, deleteAllProducts } from "@/lib/actions/products";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProductForm } from "@/components/products/product-form";
 import {
     Dialog,
@@ -22,6 +22,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ProductListTableProps {
     products: Product[];
@@ -39,6 +40,19 @@ export default function ProductListTable({ products, currentPage, totalPages, to
     const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // Bulk Delete State
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [isSelectAllMode, setIsSelectAllMode] = useState(false); // Mode where ALL items across pages are selected
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+    const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+    // Reset selection when products change (e.g. pagination), unless in global select all mode
+    useEffect(() => {
+        if (!isSelectAllMode) {
+            setSelectedIds([]);
+        }
+    }, [products, isSelectAllMode]);
+
     const handlePageChange = (page: number) => {
         const params = new URLSearchParams(searchParams);
         params.set('page', page.toString());
@@ -54,82 +68,211 @@ export default function ProductListTable({ products, currentPage, totalPages, to
 
         if (result.success) {
             setDeletingProduct(null);
-            // In a real app, we might trigger a toast here
         } else {
             alert(result.error || 'Gagal menghapus barang');
         }
     };
 
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0 && !isSelectAllMode) return;
+
+        setIsBulkDeleting(true);
+
+        let result;
+        if (isSelectAllMode) {
+            result = await deleteAllProducts();
+        } else {
+            result = await bulkDeleteProducts(selectedIds);
+        }
+
+        setIsBulkDeleting(false);
+
+        if (result.success) {
+            setShowBulkDeleteConfirm(false);
+            setSelectedIds([]);
+            setIsSelectAllMode(false);
+        } else {
+            alert(result.error || 'Gagal menghapus barang');
+        }
+    };
+
+    const toggleSelectAllPage = () => {
+        if (isSelectAllMode) {
+            setIsSelectAllMode(false);
+            setSelectedIds([]);
+            return;
+        }
+
+        if (selectedIds.length === products.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(products.map(p => p.id));
+        }
+    };
+
+    const selectAllGlobal = () => {
+        setIsSelectAllMode(true);
+        setSelectedIds(products.map(p => p.id)); // Visually select current page too
+    };
+
+    const clearSelection = () => {
+        setIsSelectAllMode(false);
+        setSelectedIds([]);
+    }
+
+    const toggleSelectOne = (id: number) => {
+        if (isSelectAllMode) {
+            // If we are in global mode, deselection is tricky logic-wise. 
+            // For simplicity, let's disable individual deselection in global mode OR 
+            // revert to page-based selection. 
+            // Let's revert to page-based selection but keep others selected? No, easier to just reset.
+            setIsSelectAllMode(false);
+            setSelectedIds([]); // Or keep current page selected
+            return;
+        }
+
+        if (selectedIds.includes(id)) {
+            setSelectedIds(selectedIds.filter(itemId => itemId !== id));
+        } else {
+            setSelectedIds([...selectedIds, id]);
+        }
+    };
+
+    const isAllPageSelected = products.length > 0 && selectedIds.length === products.length;
+
     return (
-        <div>
-            <Table>
-                <TableHeader className="bg-gray-50/50">
-                    <TableRow>
-                        <TableHead className="w-[50px]">No</TableHead>
-                        <TableHead>Kode</TableHead>
-                        <TableHead>Nama Barang</TableHead>
-                        <TableHead>Jenis</TableHead>
-                        <TableHead className="text-right">Modal</TableHead>
-                        <TableHead className="text-right">Harga Jual</TableHead>
-                        <TableHead className="text-center">Stok</TableHead>
-                        <TableHead className="text-center">Aksi</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {products.length === 0 ? (
-                        <TableRow>
-                            <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
-                                Tidak ada data barang.
-                            </TableCell>
-                        </TableRow>
-                    ) : (
-                        products.map((product, index) => (
-                            <TableRow key={product.id}>
-                                <TableCell>{(currentPage - 1) * 10 + index + 1}</TableCell>
-                                <TableCell className="font-mono text-xs text-gray-500">{product.kode}</TableCell>
-                                <TableCell className="font-medium text-gray-900">{product.nama}</TableCell>
-                                <TableCell className="text-gray-500">{product.jenis || '-'}</TableCell>
-                                <TableCell className="text-right font-mono text-gray-600">
-                                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.modal)}
-                                </TableCell>
-                                <TableCell className="text-right font-bold text-gray-900">
-                                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.harga)}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    <StockBadge stok={product.jumlah} />
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    <div className="flex items-center justify-center gap-2">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
-                                        >
-                                            <Eye className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-orange-500 hover:text-orange-600 hover:bg-orange-50"
-                                            onClick={() => setEditingProduct(product)}
-                                        >
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                                            onClick={() => setDeletingProduct(product)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ))
+        <div className="space-y-4">
+            {/* Bulk Actions Bar */}
+            {(selectedIds.length > 0 || isSelectAllMode) && (
+                <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                    <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-red-700">
+                            <BadgeCheck className="h-5 w-5" />
+                            <span className="font-medium">
+                                {isSelectAllMode
+                                    ? `Semua ${totalItems} barang terpilih`
+                                    : `${selectedIds.length} barang terpilih`}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {isSelectAllMode ? (
+                                <Button size="sm" variant="ghost" onClick={clearSelection} className="text-red-600 hover:text-red-700 hover:bg-red-100">
+                                    Batalkan
+                                </Button>
+                            ) : null}
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => setShowBulkDeleteConfirm(true)}
+                                className="shadow-sm"
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Hapus {isSelectAllMode ? 'Semua' : 'Terpilih'}
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* "Select All Global" Prompt */}
+                    {!isSelectAllMode && isAllPageSelected && totalItems > products.length && (
+                        <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg text-center text-sm text-blue-800">
+                            <span>Baru {selectedIds.length} barang di halaman ini yang terpilih. </span>
+                            <button
+                                onClick={selectAllGlobal}
+                                className="font-bold underline hover:text-blue-900 focus:outline-none"
+                            >
+                                Pilih semua {totalItems} barang di database?
+                            </button>
+                        </div>
                     )}
-                </TableBody>
-            </Table>
+                </div>
+            )}
+
+            <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <Table className="min-w-[1000px]">
+                        <TableHeader className="bg-gray-50/50">
+                            <TableRow>
+                                <TableHead className="w-[50px] text-center">
+                                    <Checkbox
+                                        checked={isAllPageSelected || isSelectAllMode}
+                                        onCheckedChange={toggleSelectAllPage}
+                                        aria-label="Select all"
+                                    />
+                                </TableHead>
+                                <TableHead className="w-[50px]">No</TableHead>
+                                <TableHead className="whitespace-nowrap">Kode</TableHead>
+                                <TableHead className="whitespace-nowrap">Nama Barang</TableHead>
+                                <TableHead className="whitespace-nowrap">Jenis</TableHead>
+                                <TableHead className="text-right whitespace-nowrap">Modal</TableHead>
+                                <TableHead className="text-right whitespace-nowrap">Harga Jual</TableHead>
+                                <TableHead className="text-center whitespace-nowrap">Stok</TableHead>
+                                <TableHead className="text-center whitespace-nowrap">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {products.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
+                                        Tidak ada data barang.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                products.map((product, index) => (
+                                    <TableRow key={product.id} className={(selectedIds.includes(product.id) || isSelectAllMode) ? "bg-blue-50/50" : ""}>
+                                        <TableCell className="text-center">
+                                            <Checkbox
+                                                checked={selectedIds.includes(product.id) || isSelectAllMode}
+                                                onCheckedChange={() => toggleSelectOne(product.id)}
+                                                aria-label={`Select ${product.nama}`}
+                                            />
+                                        </TableCell>
+                                        <TableCell>{(currentPage - 1) * 10 + index + 1}</TableCell>
+                                        <TableCell className="font-mono text-xs text-gray-500 whitespace-nowrap">{product.kode}</TableCell>
+                                        <TableCell className="font-medium text-gray-900 whitespace-nowrap">{product.nama}</TableCell>
+                                        <TableCell className="text-gray-500 whitespace-nowrap">{product.jenis || '-'}</TableCell>
+                                        <TableCell className="text-right font-mono text-gray-600 whitespace-nowrap">
+                                            {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.modal)}
+                                        </TableCell>
+                                        <TableCell className="text-right font-bold text-gray-900 whitespace-nowrap">
+                                            {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.harga)}
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            <StockBadge stok={product.jumlah} />
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                                                >
+                                                    <Eye className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-orange-500 hover:text-orange-600 hover:bg-orange-50"
+                                                    onClick={() => setEditingProduct(product)}
+                                                >
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                    onClick={() => setDeletingProduct(product)}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </div>
 
             {/* Pagination */}
             {totalPages > 1 && (
@@ -170,7 +313,7 @@ export default function ProductListTable({ products, currentPage, totalPages, to
                 />
             )}
 
-            {/* Delete Confirmation Modal */}
+            {/* Delete Confirmation Modal (Single) */}
             <Dialog open={!!deletingProduct} onOpenChange={(open) => !open && setDeletingProduct(null)}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
@@ -188,6 +331,33 @@ export default function ProductListTable({ products, currentPage, totalPages, to
                         <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
                             {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
                             Hapus Barang
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Bulk Delete Confirmation Modal */}
+            <Dialog open={showBulkDeleteConfirm} onOpenChange={(open) => !open && setShowBulkDeleteConfirm(false)}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle className="text-red-600 flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5" /> Konfirmasi Hapus Banyak
+                        </DialogTitle>
+                        <DialogDescription>
+                            {isSelectAllMode ? (
+                                <span>Apakah Anda yakin ingin menghapus <strong>SEMUA {totalItems} DATA BARANG</strong> di database? Tindakan ini sangat berbahaya dan tidak dapat dibatalkan.</span>
+                            ) : (
+                                <span>Apakah Anda yakin ingin menghapus <strong>{selectedIds.length} barang terpilih</strong>? Tindakan ini tidak dapat dibatalkan.</span>
+                            )}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="outline" onClick={() => setShowBulkDeleteConfirm(false)} disabled={isBulkDeleting}>
+                            Batal
+                        </Button>
+                        <Button variant="destructive" onClick={handleBulkDelete} disabled={isBulkDeleting}>
+                            {isBulkDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                            {isSelectAllMode ? 'Hapus SEMUA Data' : `Hapus ${selectedIds.length} Barang`}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

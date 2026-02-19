@@ -1,12 +1,24 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronsUpDown, Loader2, Search } from "lucide-react"
+import { Check, ChevronsUpDown, Loader2, Search, AlertCircle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
 import { getProducts, type Product } from "@/lib/actions/products"
-import { Input } from "@/components/ui/input"
 
 interface ProductComboboxProps {
     onSelect: (product: Product) => void;
@@ -14,119 +26,114 @@ interface ProductComboboxProps {
 
 export function ProductCombobox({ onSelect }: ProductComboboxProps) {
     const [open, setOpen] = React.useState(false)
+    const [value, setValue] = React.useState("")
     const [search, setSearch] = React.useState("")
-    const [allProducts, setAllProducts] = React.useState<Product[]>([])
-    const [filteredProducts, setFilteredProducts] = React.useState<Product[]>([])
+    const [products, setProducts] = React.useState<Product[]>([])
     const [loading, setLoading] = React.useState(false)
-    const [hasFetched, setHasFetched] = React.useState(false)
-    const containerRef = React.useRef<HTMLDivElement>(null)
 
-    // Initial fetch of a larger batch for speed
+    // Initial fetch
     React.useEffect(() => {
-        if (!open || hasFetched) return;
+        if (!open) return; // Only fetch when opened
 
         setLoading(true);
-        getProducts('', 1, 200).then((res) => {
-            setAllProducts(res.data);
-            setFilteredProducts(res.data);
+        // Fetch products.
+        // Let's refetch every time it opens to ensure freshness, or use a comprehensive strategy.
+        // For now, refetching on open is safer for "deleted items" issue.
+
+        getProducts('', 1, 1000).then((res) => { // Increased limit to ensure we get all for search
+            setProducts(res.data);
             setLoading(false);
-            setHasFetched(true);
         }).catch(() => setLoading(false));
-    }, [open, hasFetched]);
+    }, [open]);
 
-    // Fast client-side filtering
-    React.useEffect(() => {
-        if (!search) {
-            setFilteredProducts(allProducts);
-            return;
-        }
-
-        const filtered = allProducts.filter(p =>
-            p.nama.toLowerCase().includes(search.toLowerCase()) ||
-            p.kode.toLowerCase().includes(search.toLowerCase())
-        );
-        setFilteredProducts(filtered);
-    }, [search, allProducts]);
+    const handleSelect = (product: Product) => {
+        setValue(product.nama);
+        onSelect(product);
+        setOpen(false);
+        setSearch(""); // Reset search after selection
+    };
 
     return (
-        <div className="relative w-full" ref={containerRef}>
-            <Button
-                type="button"
-                variant="outline"
-                role="combobox"
-                aria-expanded={open}
-                className="w-full justify-between bg-white text-left font-normal"
-                onClick={() => setOpen(!open)}
-            >
-                <span className="truncate">
-                    {search || "Pilih barang..."}
-                </span>
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-
-            {open && (
-                <div className="absolute top-full left-0 w-full mt-2 bg-white border rounded-xl shadow-2xl z-[100] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                    <div className="p-3 border-b bg-gray-50 flex items-center gap-2">
-                        <Search className="h-4 w-4 text-gray-400" />
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="w-full justify-between bg-white text-left font-normal"
+                >
+                    <span className="truncate">
+                        {value ? value : "Pilih barang..."}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-[320px] p-0" align="start">
+                <Command shouldFilter={false}>
+                    <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
+                        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
                         <input
-                            className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400"
-                            placeholder="Ketik nama atau kode..."
+                            className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="Cari nama atau kode..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            autoFocus
-                            onKeyDown={(e) => {
-                                if (e.key === 'Escape') setOpen(false);
-                                e.stopPropagation(); // Don't let Dialog handle escapes initially
-                            }}
                         />
                     </div>
-
-                    <div className="max-h-[300px] overflow-y-auto">
-                        {loading && filteredProducts.length === 0 ? (
-                            <div className="flex items-center justify-center p-8">
-                                <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
-                                <span className="ml-2 text-sm text-gray-500 font-medium">Mencari barang...</span>
+                    <CommandList className="max-h-[400px]">
+                        {loading ? (
+                            <div className="flex items-center justify-center p-6 text-sm text-muted-foreground">
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Memuat data...
                             </div>
-                        ) : filteredProducts.length === 0 ? (
-                            <div className="p-8 text-center text-sm text-gray-400 italic">
-                                Barang tidak ditemukan.
+                        ) : products.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center p-6 text-center">
+                                <AlertCircle className="h-8 w-8 text-yellow-500 mb-2" />
+                                <p className="text-sm font-medium text-gray-900">Tidak ada data barang.</p>
+                                <p className="text-xs text-gray-500 mt-1">Silakan input data barang terlebih dahulu di halaman Data Barang.</p>
                             </div>
                         ) : (
-                            <div className="p-1">
-                                {filteredProducts.map((product: Product) => (
-                                    <button
-                                        key={product.kode}
-                                        type="button"
-                                        className="w-full flex flex-col items-start p-3 rounded-lg hover:bg-blue-50 text-left transition-colors group border-b border-gray-50 last:border-0"
-                                        onClick={(e) => {
-                                            console.log("Product clicked:", product.nama);
-                                            onSelect(product);
-                                            setSearch(product.nama);
-                                            setOpen(false);
-                                            // Explicitly prevent bubbling to Dialog
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                        }}
-                                    >
-                                        <div className="flex w-full justify-between items-center mb-1">
-                                            <span className="font-bold text-gray-900 group-hover:text-blue-700">{product.nama}</span>
-                                            <span className="text-[10px] font-mono bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
-                                                {product.kode}
-                                            </span>
-                                        </div>
-                                        <div className="flex w-full justify-between text-[11px] text-gray-500">
-                                            <span>Stok: <span className={cn("font-bold", product.jumlah > 10 ? "text-green-600" : "text-red-500")}>{product.jumlah}</span></span>
-                                            <span className="font-mono text-blue-600 font-semibold">
-                                                Rp {product.harga.toLocaleString('id-ID')}
-                                            </span>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
+                            <>
+                                {products.filter(p =>
+                                    !search ||
+                                    p.nama.toLowerCase().includes(search.toLowerCase()) ||
+                                    p.kode.toLowerCase().includes(search.toLowerCase())
+                                ).length === 0 && (
+                                        <CommandEmpty>Barang tidak ditemukan.</CommandEmpty>
+                                    )}
+                                <CommandGroup>
+                                    {products
+                                        .filter(product =>
+                                            !search ||
+                                            product.nama.toLowerCase().includes(search.toLowerCase()) ||
+                                            product.kode.toLowerCase().includes(search.toLowerCase())
+                                        )
+                                        .map((product) => (
+                                            <CommandItem
+                                                key={product.id}
+                                                value={`${product.id}-${product.nama}`} // Unique value
+                                                onSelect={() => handleSelect(product)}
+                                                className="flex flex-col items-start gap-1 p-3 border-b border-gray-50 last:border-0 cursor-pointer aria-selected:bg-blue-50 data-[disabled]:pointer-events-auto data-[disabled]:opacity-100"
+                                            >
+                                                <div className="flex w-full justify-between items-center">
+                                                    <span className="text-base font-bold text-gray-900">{product.nama}</span>
+                                                    <span className="text-[10px] font-mono bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-200">
+                                                        {product.kode}
+                                                    </span>
+                                                </div>
+                                                <div className="flex w-full justify-between text-xs text-gray-500 mt-1">
+                                                    <span>Stok: <span className={cn("font-bold text-sm", product.jumlah > 10 ? "text-green-600" : "text-red-500")}>{product.jumlah}</span></span>
+                                                    <span className="font-mono text-blue-600 font-bold text-sm">
+                                                        Rp {product.harga.toLocaleString('id-ID')}
+                                                    </span>
+                                                </div>
+                                            </CommandItem>
+                                        ))}
+                                </CommandGroup>
+                            </>
                         )}
-                    </div>
-                </div>
-            )}
-        </div>
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
     )
 }

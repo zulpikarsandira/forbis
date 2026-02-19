@@ -1,0 +1,17 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_URI} !^/\.next
+  RewriteRule . /index.html [L]
+</IfModule>
+
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+PassengerAppRoot "/home/username/public_html"
+PassengerBaseURI "/"
+PassengerNodejs "/usr/bin/node"
+PassengerAppType "node"
+PassengerStartupFile "server.js"
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END

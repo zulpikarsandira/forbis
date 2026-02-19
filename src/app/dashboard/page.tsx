@@ -43,9 +43,9 @@ export default async function DashboardPage() {
             </div>
 
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-2xl font-bold tracking-tight text-gray-900">Statistik Penjualan</h1>
-                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border shadow-sm">
+                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border shadow-sm w-fit">
                     <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
                     <span className="text-xs font-semibold text-gray-700">Live Data</span>
                 </div>

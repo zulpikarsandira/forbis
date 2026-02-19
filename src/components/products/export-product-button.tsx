@@ -3,7 +3,10 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { FileDown, Loader2, FileSpreadsheet, FileText } from "lucide-react";
-import * as XLSX from 'xlsx';
+
+import ExcelJS from 'exceljs'; // Use ExcelJS for styling
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { getAllProducts } from '@/lib/actions/products';
 import {
     Dialog,
@@ -18,8 +21,9 @@ import { Label } from "@/components/ui/label";
 
 export function ExportProductButton() {
     const [loading, setLoading] = useState(false);
+
     const [open, setOpen] = useState(false);
-    const [format, setFormat] = useState<'xlsx' | 'csv'>('xlsx');
+    const [format, setFormat] = useState<'xlsx' | 'pdf'>('xlsx'); // Changed CSV to PDF
     const [template, setTemplate] = useState<'lengkap' | 'sederhana'>('lengkap');
 
     const handleExport = async () => {
@@ -49,25 +53,118 @@ export function ExportProductButton() {
                 }));
             }
 
-            const ws = XLSX.utils.json_to_sheet(exportData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Data Barang");
-
+            // --- EXCELJS IMPLEMENTATION ---
             const fileName = `Export_Barang_${new Date().toISOString().split('T')[0]}.${format}`;
 
             if (format === 'xlsx') {
-                XLSX.writeFile(wb, fileName);
-            } else {
-                const csv = XLSX.utils.sheet_to_csv(ws);
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement("a");
-                const url = URL.createObjectURL(blob);
-                link.setAttribute("href", url);
-                link.setAttribute("download", fileName);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
+                // --- EXCELJS IMPLEMENTATION ---
+                const workbook = new ExcelJS.Workbook();
+                const worksheet = workbook.addWorksheet('Data Barang');
+
+                // Define Columns based on Template
+                if (template === 'lengkap') {
+                    worksheet.columns = [
+                        { header: 'Kode', key: 'kode', width: 12 },
+                        { header: 'Nama Barang', key: 'nama', width: 30 },
+                        { header: 'Jenis', key: 'jenis', width: 15 },
+                        { header: 'Suplier', key: 'suplier', width: 20 },
+                        { header: 'Harga Modal', key: 'modal', width: 15 },
+                        { header: 'Harga Jual', key: 'harga', width: 15 },
+                        { header: 'Stok', key: 'stok', width: 10 },
+                        { header: 'Tgl Update', key: 'updated', width: 15 },
+                    ];
+                } else {
+                    worksheet.columns = [
+                        { header: 'Kode', key: 'kode', width: 12 },
+                        { header: 'Nama Barang', key: 'nama', width: 30 },
+                        { header: 'Harga Jual', key: 'harga', width: 15 },
+                        { header: 'Stok', key: 'stok', width: 10 },
+                    ];
+                }
+
+                // Styling Header
+                const headerRow = worksheet.getRow(1);
+                headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                headerRow.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FF2563EB' } // Blue
+                };
+                headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+
+                // Add Data
+                exportData.forEach((item) => {
+                    const row = worksheet.addRow(template === 'lengkap' ? {
+                        kode: item['Kode'],
+                        nama: item['Nama Barang'],
+                        jenis: item['Jenis'],
+                        suplier: item['Suplier'],
+                        modal: item['Harga Modal'],
+                        harga: item['Harga Jual'],
+                        stok: item['Stok'],
+                        updated: item['Tanggal Update']
+                    } : {
+                        kode: item['Kode'],
+                        nama: item['Nama Barang'],
+                        harga: item['Harga Jual'],
+                        stok: item['Stok']
+                    });
+
+                    // Borders & Format
+                    row.eachCell((cell, colNumber) => {
+                        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+
+                        // Number format for money
+                        if ((template === 'lengkap' && (colNumber === 5 || colNumber === 6)) ||
+                            (template === 'sederhana' && colNumber === 3)) {
+                            cell.numFmt = '#,##0';
+                            cell.alignment = { horizontal: 'right' };
+                        }
+                    });
+                });
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fileName;
                 link.click();
-                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+
+            } else {
+                // --- PDF IMPLEMENTATION ---
+                const doc = new jsPDF();
+
+                doc.setFontSize(18);
+                doc.text('Data Barang', 105, 15, { align: 'center' });
+                doc.setFontSize(10);
+                doc.text(`Tanggal Export: ${new Date().toLocaleDateString('id-ID')}`, 105, 20, { align: 'center' });
+
+                const headIndices = template === 'lengkap'
+                    ? [['Kode', 'Nama', 'Jenis', 'Suplier', 'Modal', 'Jual', 'Stok']]
+                    : [['Kode', 'Nama', 'Jual', 'Stok']];
+
+                const bodyData = exportData.map(item => template === 'lengkap'
+                    ? [item['Kode'], item['Nama Barang'], item['Jenis'], item['Suplier'],
+                    new Intl.NumberFormat('id-ID').format(item['Harga Modal']),
+                    new Intl.NumberFormat('id-ID').format(item['Harga Jual']),
+                    item['Stok']]
+                    : [item['Kode'], item['Nama Barang'],
+                    new Intl.NumberFormat('id-ID').format(item['Harga Jual']),
+                    item['Stok']]
+                );
+
+                autoTable(doc, {
+                    head: headIndices,
+                    body: bodyData,
+                    startY: 25,
+                    theme: 'grid',
+                    headStyles: { fillColor: [37, 99, 235] }, // Blue
+                    styles: { fontSize: 8 }
+                });
+
+                doc.save(fileName.replace('.xlsx', '.pdf'));
             }
 
             setOpen(false);
@@ -104,7 +201,7 @@ export function ExportProductButton() {
                                     name="format"
                                     value="xlsx"
                                     checked={format === 'xlsx'}
-                                    onChange={(e) => setFormat(e.target.value as 'xlsx' | 'csv')}
+                                    onChange={(e) => setFormat(e.target.value as 'xlsx' | 'pdf')}
                                     className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                                 />
                                 <span className="flex items-center gap-1.5 text-sm">
@@ -115,13 +212,13 @@ export function ExportProductButton() {
                                 <input
                                     type="radio"
                                     name="format"
-                                    value="csv"
-                                    checked={format === 'csv'}
-                                    onChange={(e) => setFormat(e.target.value as 'xlsx' | 'csv')}
+                                    value="pdf"
+                                    checked={format === 'pdf'}
+                                    onChange={(e) => setFormat(e.target.value as 'xlsx' | 'pdf')}
                                     className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                                 />
                                 <span className="flex items-center gap-1.5 text-sm">
-                                    <FileText className="h-4 w-4 text-blue-600" /> CSV (.csv)
+                                    <FileText className="h-4 w-4 text-red-600" /> PDF (.pdf)
                                 </span>
                             </label>
                         </div>

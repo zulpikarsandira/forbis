@@ -31,21 +31,15 @@ export function Sidebar() {
         <aside className="bg-white hidden lg:flex flex-col w-64 h-screen sticky top-0 border-r border-gray-100 shadow-sm z-20">
             {/* Logo */}
             <div className="h-20 flex items-center px-8">
-                <div className="h-10 w-10 rounded-xl bg-gradient-primary flex items-center justify-center text-white shadow-lg shadow-indigo-200">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="h-6 w-6"
-                    >
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                    </svg>
+                <img
+                    src="/images/1000075381-removebg-preview.png"
+                    alt="Logo Forbis"
+                    className="h-12 w-auto object-contain"
+                />
+                <div className="ml-3 flex flex-col">
+                    <span className="font-bold text-lg text-gray-800 tracking-tight leading-none">Forbis</span>
+                    <span className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">Cimanggung</span>
                 </div>
-                <span className="ml-3 font-bold text-xl text-gray-800 tracking-tight">Koperasi</span>
             </div>
 
             {/* Navigation */}
@@ -70,20 +64,7 @@ export function Sidebar() {
                 })}
             </nav>
 
-            {/* Upgrade Card (Placeholder) */}
-            <div className="p-4 mx-4 mb-6 bg-indigo-50 rounded-3xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 -mt-2 -mr-2 h-16 w-16 bg-indigo-100 rounded-full opacity-50 blur-xl"></div>
-                <div className="relative z-10 flex flex-col items-center text-center">
-                    <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center mb-2 shadow-sm">
-                        <Rocket className="h-5 w-5 text-indigo-500" />
-                    </div>
-                    <h4 className="font-bold text-gray-900 text-sm">Versi Pro</h4>
-                    <p className="text-xs text-gray-500 mt-1 mb-3">Dapatkan fitur lebih lengkap</p>
-                    <Button className="w-full bg-gradient-primary text-white rounded-xl h-8 text-xs shadow-md shadow-indigo-200">
-                        Upgrade
-                    </Button>
-                </div>
-            </div>
+
         </aside>
     );
 }

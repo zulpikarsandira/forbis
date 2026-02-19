@@ -40,6 +40,19 @@ export function RightSidebar({ isOpen, onClose }: RightSidebarProps) {
 
     return (
         <aside className="bg-white hidden xl:flex flex-col w-80 h-screen sticky top-0 border-l border-gray-100 p-6 z-20 transition-all duration-300">
+            {/* Logo Section */}
+            <div className="flex flex-col items-center justify-center mb-8">
+                <img
+                    src="/images/1000075381-removebg-preview.png"
+                    alt="Logo Forbis"
+                    className="h-20 w-auto object-contain"
+                />
+                <div className="mt-3 text-center">
+                    <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest leading-tight">Koperasi Forbis</h2>
+                    <p className="text-[10px] text-gray-400 font-medium">Cimanggung</p>
+                </div>
+            </div>
+
             {/* Header / User Profile */}
             <div className="flex items-center justify-between mb-8">
                 <div className="flex gap-2">
@@ -85,7 +98,7 @@ export function RightSidebar({ isOpen, onClose }: RightSidebarProps) {
             {/* Recent Activity / Scheduled */}
             <div className="flex-1 flex flex-col min-h-0">
                 <h3 className="font-bold text-gray-900 mb-4">Aktivitas Terbaru</h3>
-                <div className="space-y-4 overflow-y-auto pr-2 flex-1 scrollbar-hide">
+                <div className="space-y-4 overflow-y-auto pr-2 flex-1 h-[300px] xl:h-[calc(100vh-450px)]">
                     {loading ? (
                         <div className="flex justify-center py-8">
                             <Loader2 className="h-6 w-6 animate-spin text-primary" />

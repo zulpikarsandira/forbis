@@ -36,14 +36,20 @@ export type ProfitAllocation = {
 };
 
 // Calculate potential profit for a period
-export async function calculateProfit(startDate: string, endDate: string) {
+export async function calculateProfit(startDate: string, endDate: string, category?: 'Warung' | 'Dapur') {
     const supabase = await createSupabaseServerClient();
 
-    const { data, error } = await supabase
+    let query = supabase
         .from('barang_laku')
         .select('laba')
         .gte('tanggal', startDate)
         .lte('tanggal', endDate);
+
+    if (category) {
+        query = query.eq('kategori', category);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
         console.error('Error calculating profit:', error);
@@ -56,40 +62,42 @@ export async function calculateProfit(startDate: string, endDate: string) {
 
 // Generate allocation details without saving (Preview)
 export async function previewAllocation(totalLaba: number) {
+    // 1. Zakat 2.5% dari Total Laba
     const zakat = totalLaba * 0.025;
-    const sisa = totalLaba - zakat;
-    const cashback = sisa * 0.60;
-    const kop = sisa * 0.40;
+    const sisaZakat = totalLaba - zakat;
 
-    // Breakdown Kop
-    const ketua = kop * 0.40;
-    const waka1 = kop * 0.10;
-    const waka2 = kop * 0.10;
-    const sekretaris = kop * 0.10;
-    const bendahara = kop * 0.25;
-    const shu = kop * 0.05;
+    // 2. Bagi Cashback Dapur (60%) & Kop. Forbis (40%) dari sisa zakat
+    const cashbackDapur = sisaZakat * 0.60;
+    const kopForbis = sisaZakat * 0.40;
+
+    // 3. Bagi Kop. Forbis menjadi Operasional (80%) & SHU (20%)
+    const operasional = kopForbis * 0.80;
+    const shu = kopForbis * 0.20;
+
+    // 4. Bagi Operasional untuk pekerja & DLL
+    const pekerjaA = operasional * 0.30;
+    const pekerjaB = operasional * 0.20;
+    const pekerjaC = operasional * 0.20;
+    const pekerjaD = operasional * 0.10;
+    const dll = operasional * 0.20;
 
     return {
         totalLaba,
-        zakat,
-        cashback,
-        kop,
         details: [
             { category: 'Zakat (2.5%)', amount: zakat },
-            { category: 'Cashback (60%)', amount: cashback },
-            { category: 'Kop. Forbis (40%)', amount: kop },
-            // Breakdown
-            { category: 'Ketua (40% dari Kop)', amount: ketua },
-            { category: 'Wakil Ketua 1 (10% dari Kop)', amount: waka1 },
-            { category: 'Wakil Ketua 2 (10% dari Kop)', amount: waka2 },
-            { category: 'Sekretaris (10% dari Kop)', amount: sekretaris },
-            { category: 'Bendahara (25% dari Kop)', amount: bendahara },
-            { category: 'SHU (5% dari Kop)', amount: shu },
+            { category: 'Cashback Dapur (60% dari Sisa Zakat)', amount: cashbackDapur },
+            { category: 'SHU (20% dari Kop. Forbis)', amount: shu },
+            // Operasional breakdown
+            { category: 'Pekerja A (30% dari Operasional)', amount: pekerjaA },
+            { category: 'Pekerja B (20% dari Operasional)', amount: pekerjaB },
+            { category: 'Pekerja C (20% dari Operasional)', amount: pekerjaC },
+            { category: 'Pekerja D (10% dari Operasional)', amount: pekerjaD },
+            { category: 'DLL (20% dari Operasional)', amount: dll },
         ]
     };
 }
 
-export async function generateAndLockAllocation(startDate: string, endDate: string, periodeName: string) {
+export async function generateAndLockAllocation(startDate: string, endDate: string, periodeName: string, category?: 'Warung' | 'Dapur') {
     const supabase = await createSupabaseServerClient();
 
     // 1. Check if locked
@@ -105,7 +113,7 @@ export async function generateAndLockAllocation(startDate: string, endDate: stri
     }
 
     // 2. Calculate Profit
-    const { totalLaba, error } = await calculateProfit(startDate, endDate);
+    const { totalLaba, error } = await calculateProfit(startDate, endDate, category);
     if (error || typeof totalLaba !== 'number') return { error: 'Gagal menghitung laba.' };
 
     if (totalLaba <= 0) return { error: 'Tidak ada laba untuk periode ini.' };
@@ -163,3 +171,114 @@ export async function resetAllocation(periode: string) {
     revalidatePath('/dashboard/profit');
     return { success: true };
 }
+
+export type DetailedProfitItem = {
+    id: number;
+    tanggal: string;
+    no_faktur: string;
+    nama_barang: string;
+    banyak: number;
+    satuan: string;
+    harga_suplier: number; // Modal
+    jumlah_modal: number; // Total Modal
+    harga_koperasi: number; // Jual
+    jumlah_jual: number; // Total Jual
+    laba: number; // Profit
+    zakat: number;
+    sisa: number;
+    cashback_dapur: number;
+    kop_forbis: number;
+    operasional: number;
+    shu: number;
+    pekerja_a: number;
+    pekerja_b: number;
+    pekerja_c: number;
+    pekerja_d: number;
+    dll: number;
+}
+
+export async function getDetailedProfitData(startDate: string, endDate: string, category?: 'Warung' | 'Dapur') {
+    const supabase = await createSupabaseServerClient();
+
+    // 1. Fetch Sales
+    let query = supabase
+        .from('barang_laku')
+        .select('*')
+        .gte('tanggal', startDate)
+        .lte('tanggal', endDate)
+        .order('tanggal', { ascending: true });
+
+    if (category) {
+        query = query.eq('kategori', category);
+    }
+
+    const { data: sales, error: salesError } = await query;
+
+    if (salesError) return { error: salesError.message };
+
+    // 2. Fetch Products
+    const productNames = [...new Set(sales.map((s: any) => s.nama))];
+    const { data: products } = await supabase
+        .from('barang')
+        .select('nama, suplier')
+        .in('nama', productNames);
+
+    // Create map for quick lookup
+    const productMap = new Map(products?.map((p: any) => [p.nama, p]) || []);
+
+    const detailedData: DetailedProfitItem[] = sales.map((sale: any) => {
+        const product = productMap.get(sale.nama);
+
+        // Basic calculations
+        const totalJual = sale.total_harga;
+        const profit = sale.laba;
+        const totalModal = totalJual - profit;
+
+        const qty = sale.jumlah;
+        const hargaSuplier = qty > 0 ? totalModal / qty : 0;
+        const hargaKoperasi = qty > 0 ? totalJual / qty : 0;
+
+        // Allocation Logic (Per Row)
+        const zakat = profit * 0.025;
+        const sisaZakat = profit - zakat;
+        const cashbackDapur = sisaZakat * 0.60;
+        const kopForbis = sisaZakat * 0.40;
+
+        const operasional = kopForbis * 0.80;
+        const shu = kopForbis * 0.20;
+
+        const pekerjaA = operasional * 0.30;
+        const pekerjaB = operasional * 0.20;
+        const pekerjaC = operasional * 0.20;
+        const pekerjaD = operasional * 0.10;
+        const dll = operasional * 0.20;
+
+        return {
+            id: sale.id,
+            tanggal: sale.tanggal,
+            no_faktur: `INV/${new Date(sale.tanggal).getTime()}/${sale.id}`, // Generated Invoice ID
+            nama_barang: sale.nama,
+            banyak: qty,
+            satuan: 'Pcs', // Default
+            harga_suplier: hargaSuplier,
+            jumlah_modal: totalModal,
+            harga_koperasi: hargaKoperasi,
+            jumlah_jual: totalJual,
+            laba: profit,
+            zakat,
+            sisa: sisaZakat,
+            cashback_dapur: cashbackDapur,
+            kop_forbis: kopForbis,
+            operasional,
+            shu,
+            pekerja_a: pekerjaA,
+            pekerja_b: pekerjaB,
+            pekerja_c: pekerjaC,
+            pekerja_d: pekerjaD,
+            dll
+        };
+    });
+
+    return { data: detailedData };
+}
+

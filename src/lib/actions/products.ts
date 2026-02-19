@@ -157,6 +157,30 @@ export async function deleteProduct(id: number) {
     return { success: true };
 }
 
+export async function bulkDeleteProducts(ids: number[]) {
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.from('barang').delete().in('id', ids);
+
+    if (error) {
+        return { error: error.message };
+    }
+
+    revalidatePath('/dashboard/products');
+    return { success: true };
+}
+
+export async function deleteAllProducts() {
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.from('barang').delete().neq('id', 0); // Delete all rows
+
+    if (error) {
+        return { error: error.message };
+    }
+
+    revalidatePath('/dashboard/products');
+    return { success: true };
+}
+
 export async function bulkCreateProducts(products: Omit<Product, 'id' | 'created_at' | 'updated_at'>[]) {
     const supabase = await createSupabaseServerClient();
 
