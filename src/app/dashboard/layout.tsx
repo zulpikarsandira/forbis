@@ -13,11 +13,13 @@ import {
     ShoppingCart,
     PieChart,
     LogOut,
-    Rocket
+    Rocket,
+    Settings // Added Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client'; // Import client
 
 export default function DashboardLayout({
     children,
@@ -92,6 +94,7 @@ export default function DashboardLayout({
                                 { href: '/dashboard/products', label: 'Data Barang', icon: Package },
                                 { href: '/dashboard/sales', label: 'Entry Penjualan', icon: ShoppingCart },
                                 { href: '/dashboard/profit', label: 'Pembagian Laba', icon: PieChart },
+                                { href: '/dashboard/settings', label: 'Pengaturan & Profil', icon: Settings }, // Added Profile
                             ].map(({ href, label, icon: Icon }) => {
                                 const isActive = pathname === href;
                                 return (
@@ -120,7 +123,11 @@ export default function DashboardLayout({
                             <Button
                                 variant="outline"
                                 className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 border-gray-200 rounded-2xl py-6"
-                                onClick={() => {/* logout logic */ }}
+                                onClick={async () => {
+                                    const supabase = createClient();
+                                    await supabase.auth.signOut();
+                                    window.location.href = '/login';
+                                }}
                             >
                                 <LogOut className="h-5 w-5 mr-3" />
                                 Keluar

@@ -15,6 +15,7 @@ import {
     Rocket
 } from 'lucide-react';
 import { useState } from 'react';
+import { createClient } from '@/lib/supabase/client'; // Import client
 
 export function Sidebar() {
     const pathname = usePathname();
@@ -44,7 +45,10 @@ export function Sidebar() {
 
             {/* Navigation */}
             <nav className="flex-1 px-4 space-y-2 mt-4">
-                {navItems.map(({ href, label, icon: Icon }) => {
+                {[
+                    ...navItems,
+                    { href: '/dashboard/settings', label: 'Pengaturan & Profil', icon: Settings } // Added Profile
+                ].map(({ href, label, icon: Icon }) => {
                     const isActive = pathname === href;
                     return (
                         <Link key={href} href={href}>
@@ -64,7 +68,21 @@ export function Sidebar() {
                 })}
             </nav>
 
-
+            {/* Logout Button */}
+            <div className="p-4 border-t border-gray-100">
+                <Button
+                    variant="ghost"
+                    className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl"
+                    onClick={async () => {
+                        const supabase = createClient();
+                        await supabase.auth.signOut();
+                        window.location.href = '/login';
+                    }}
+                >
+                    <LogOut className="h-[18px] w-[18px] mr-3" />
+                    Keluar
+                </Button>
+            </div>
         </aside>
     );
 }

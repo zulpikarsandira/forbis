@@ -16,20 +16,20 @@ export function DashboardCombinedTable({ lowStockItems, recentSales }: Dashboard
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <h3 className="font-bold text-lg text-gray-900">Stok Menipis & Aktivitas Terakhir</h3>
-                <div className="flex bg-gray-100 p-1 rounded-xl">
+                <div className="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto">
                     <button
                         onClick={() => setActiveTab('low-stock')}
                         className={cn(
-                            "px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2",
+                            "flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2",
                             activeTab === 'low-stock'
                                 ? "bg-white text-primary shadow-sm"
                                 : "text-gray-500 hover:text-gray-700"
                         )}
                     >
                         <AlertTriangle className="h-4 w-4" />
-                        Stok Menipis
+                        <span className="whitespace-nowrap">Stok Menipis</span>
                         {lowStockItems.length > 0 && (
                             <span className="bg-red-500 text-white text-[10px] h-4 w-4 rounded-full flex items-center justify-center">
                                 {lowStockItems.length}
@@ -39,14 +39,14 @@ export function DashboardCombinedTable({ lowStockItems, recentSales }: Dashboard
                     <button
                         onClick={() => setActiveTab('recent-activity')}
                         className={cn(
-                            "px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2",
+                            "flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2",
                             activeTab === 'recent-activity'
                                 ? "bg-white text-primary shadow-sm"
                                 : "text-gray-500 hover:text-gray-700"
                         )}
                     >
                         <History className="h-4 w-4" />
-                        Aktivitas Terakhir
+                        <span className="whitespace-nowrap">Aktivitas</span>
                     </button>
                 </div>
             </div>
