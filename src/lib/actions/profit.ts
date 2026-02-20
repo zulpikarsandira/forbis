@@ -75,11 +75,11 @@ export async function previewAllocation(totalLaba: number) {
     const shu = kopForbis * 0.20;
 
     // 4. Bagi Operasional untuk pekerja & DLL
-    const pekerjaA = operasional * 0.30;
-    const pekerjaB = operasional * 0.20;
-    const pekerjaC = operasional * 0.20;
-    const pekerjaD = operasional * 0.10;
-    const dll = operasional * 0.20;
+    const pekerjaA = operasional * 0.275; // 27.5%
+    const pekerjaB = operasional * 0.175; // 17.5%
+    const pekerjaC = operasional * 0.175; // 17.5%
+    const pekerjaD = operasional * 0.075; // 7.5%
+    const dll = operasional * 0.30;       // 30%
 
     return {
         totalLaba,
@@ -88,11 +88,11 @@ export async function previewAllocation(totalLaba: number) {
             { category: 'Cashback Dapur (60% dari Sisa Zakat)', amount: cashbackDapur },
             { category: 'SHU (20% dari Kop. Forbis)', amount: shu },
             // Operasional breakdown
-            { category: 'Pekerja A (30% dari Operasional)', amount: pekerjaA },
-            { category: 'Pekerja B (20% dari Operasional)', amount: pekerjaB },
-            { category: 'Pekerja C (20% dari Operasional)', amount: pekerjaC },
-            { category: 'Pekerja D (10% dari Operasional)', amount: pekerjaD },
-            { category: 'DLL (20% dari Operasional)', amount: dll },
+            { category: 'Pekerja A (27.5% dari Operasional)', amount: pekerjaA },
+            { category: 'Pekerja B (17.5% dari Operasional)', amount: pekerjaB },
+            { category: 'Pekerja C (17.5% dari Operasional)', amount: pekerjaC },
+            { category: 'Pekerja D (7.5% dari Operasional)', amount: pekerjaD },
+            { category: 'DLL (30% dari Operasional)', amount: dll },
         ]
     };
 }
@@ -247,11 +247,11 @@ export async function getDetailedProfitData(startDate: string, endDate: string, 
         const operasional = kopForbis * 0.80;
         const shu = kopForbis * 0.20;
 
-        const pekerjaA = operasional * 0.30;
-        const pekerjaB = operasional * 0.20;
-        const pekerjaC = operasional * 0.20;
-        const pekerjaD = operasional * 0.10;
-        const dll = operasional * 0.20;
+        const pekerjaA = operasional * 0.275; // 27.5%
+        const pekerjaB = operasional * 0.175; // 17.5%
+        const pekerjaC = operasional * 0.175; // 17.5%
+        const pekerjaD = operasional * 0.075; // 7.5%
+        const dll = operasional * 0.30;       // 30%
 
         return {
             id: sale.id,
