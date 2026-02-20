@@ -11,31 +11,38 @@ export const KOP_TEXT = {
 /**
  * Applies the official FORBIS header to a jsPDF document.
  * @param doc The jsPDF instance
- * @param title The document title (e.g., "LAPORAN PENJUALAN")
+ * @param title The document title
+ * @param logoBase64 Optional logo in base64 format
  * @returns The Y position where content should start (startY)
  */
-export function applyPDFHeader(doc: any, title: string) {
+export function applyPDFHeader(doc: any, title: string, logoBase64?: string) {
     const pageWidth = doc.internal.pageSize.getWidth();
     let currentY = 15;
+
+    // Add Logo if provided
+    if (logoBase64) {
+        // Logo on the left
+        doc.addImage(logoBase64, 'PNG', 15, 12, 25, 25);
+    }
 
     // Title / Name of Cooperative
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text(KOP_TEXT.title, pageWidth / 2, currentY, { align: 'center' });
-    currentY += 6;
+    doc.text(KOP_TEXT.title, pageWidth / 2 + 10, currentY, { align: 'center' });
+    currentY += 7;
 
     // Legal Info
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(KOP_TEXT.legal, pageWidth / 2, currentY, { align: 'center' });
+    doc.text(KOP_TEXT.legal, pageWidth / 2 + 10, currentY, { align: 'center' });
     currentY += 5;
 
     // Address
     doc.setFontSize(9);
-    doc.text(KOP_TEXT.address, pageWidth / 2, currentY, { align: 'center' });
+    doc.text(KOP_TEXT.address, pageWidth / 2 + 10, currentY, { align: 'center' });
     currentY += 4;
-    doc.text(KOP_TEXT.district, pageWidth / 2, currentY, { align: 'center' });
-    currentY += 6;
+    doc.text(KOP_TEXT.district, pageWidth / 2 + 10, currentY, { align: 'center' });
+    currentY += 10;
 
     // Line
     doc.setLineWidth(0.5);
@@ -52,31 +59,46 @@ export function applyPDFHeader(doc: any, title: string) {
 }
 
 /**
- * Applies the official FORBIS header to an ExcelJS worksheet.
+ * Applies the official FORBIS header to an ExcelJS worksheet and workbook.
+ * @param workbook The ExcelJS workbook instance
  * @param worksheet The ExcelJS worksheet instance
  * @param title The document title
  * @param lastColChar The last column character (e.g., 'H') for merging
+ * @param logoBase64 Optional logo in base64 format
  * @returns The row number where table headers should start
  */
-export function applyExcelHeader(worksheet: any, title: string, lastColChar: string) {
+export function applyExcelHeader(workbook: any, worksheet: any, title: string, lastColChar: string, logoBase64?: string) {
+    // Add Logo if provided
+    if (logoBase64) {
+        try {
+            const logoId = workbook.addImage({
+                base64: logoBase64,
+                extension: 'png',
+            });
+            worksheet.addImage(logoId, 'A1:B4');
+        } catch (e) {
+            console.error('Error adding logo to Excel:', e);
+        }
+    }
+
     // Add logic for header rows
-    worksheet.mergeCells(`A1:${lastColChar}1`);
-    const titleRow = worksheet.getCell('A1');
+    worksheet.mergeCells(`C1:${lastColChar}1`);
+    const titleRow = worksheet.getCell('C1');
     titleRow.value = KOP_TEXT.title;
     titleRow.font = { bold: true, size: 14 };
-    titleRow.alignment = { horizontal: 'center' };
+    titleRow.alignment = { horizontal: 'center', vertical: 'middle' };
 
-    worksheet.mergeCells(`A2:${lastColChar}2`);
-    const legalRow = worksheet.getCell('A2');
+    worksheet.mergeCells(`C2:${lastColChar}2`);
+    const legalRow = worksheet.getCell('C2');
     legalRow.value = KOP_TEXT.legal;
     legalRow.font = { size: 10 };
-    legalRow.alignment = { horizontal: 'center' };
+    legalRow.alignment = { horizontal: 'center', vertical: 'middle' };
 
-    worksheet.mergeCells(`A3:${lastColChar}3`);
-    const addrRow = worksheet.getCell('A3');
+    worksheet.mergeCells(`C3:${lastColChar}3`);
+    const addrRow = worksheet.getCell('C3');
     addrRow.value = `${KOP_TEXT.address}, ${KOP_TEXT.district}`;
     addrRow.font = { size: 10 };
-    addrRow.alignment = { horizontal: 'center' };
+    addrRow.alignment = { horizontal: 'center', vertical: 'middle' };
 
     worksheet.mergeCells(`A5:${lastColChar}5`);
     const subjectRow = worksheet.getCell('A5');
@@ -92,4 +114,24 @@ export function applyExcelHeader(worksheet: any, title: string, lastColChar: str
     dateRow.alignment = { horizontal: 'right' };
 
     return 8; // Table starts at row 8
+}
+
+/**
+ * Fetches the application logo and converts it to base64.
+ * Useful for exports.
+ */
+export async function getLogoBase64(): Promise<string> {
+    try {
+        const response = await fetch('/images/1000075381-removebg-preview.png');
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch (e) {
+        console.error('Failed to load logo:', e);
+        return '';
+    }
 }

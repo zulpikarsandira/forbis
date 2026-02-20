@@ -8,7 +8,7 @@ import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { cn } from "@/lib/utils"
 import ExcelJS from 'exceljs'
-import { applyExcelHeader, applyPDFHeader } from "@/lib/export-utils"
+import { applyExcelHeader, applyPDFHeader, getLogoBase64 } from "@/lib/export-utils"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -40,8 +40,9 @@ export function BulkDownloadInvoiceButton({ data, kategori, variant }: BulkDownl
             })
 
             const printNumber = `INV-${Date.now().toString().slice(-6)}`
+            const logoBase64 = await getLogoBase64();
 
-            const startY = applyPDFHeader(doc, `INVOICE - ${kategori}`)
+            const startY = applyPDFHeader(doc, `INVOICE`, logoBase64)
 
             doc.setFontSize(10)
             doc.setFont("helvetica", "normal")
@@ -106,8 +107,9 @@ export function BulkDownloadInvoiceButton({ data, kategori, variant }: BulkDownl
         try {
             const workbook = new ExcelJS.Workbook()
             const worksheet = workbook.addWorksheet(`Laporan ${kategori}`)
+            const logoBase64 = await getLogoBase64();
 
-            const startRow = applyExcelHeader(worksheet, `Laporan Penjualan - ${kategori}`, 'F')
+            const startRow = applyExcelHeader(workbook, worksheet, `INVOICE`, 'F', logoBase64)
 
             // Styling Header
             const headerRow = worksheet.getRow(startRow)

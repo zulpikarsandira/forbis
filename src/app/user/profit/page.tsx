@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { applyExcelHeader, applyPDFHeader } from '@/lib/export-utils';
+import { applyExcelHeader, applyPDFHeader, getLogoBase64 } from '@/lib/export-utils';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -58,8 +58,9 @@ export default function UserProfitPage() {
 
             const workbook = new ExcelJS.Workbook();
             const worksheet = workbook.addWorksheet(`Laba ${activeTab}`, { views: [{ state: 'frozen', xSplit: 0, ySplit: 2 }] });
+            const logoBase64 = await getLogoBase64();
 
-            const startRowTable = applyExcelHeader(worksheet, `Laporan Pembagian Laba ${activeTab} - ${periodeName}`, 'V');
+            const startRowTable = applyExcelHeader(workbook, worksheet, `Laporan Pembagian Laba ${activeTab} - ${periodeName}`, 'V', logoBase64);
 
             worksheet.getCell(`A${startRowTable}`).value = "NO"; worksheet.getCell(`B${startRowTable}`).value = "Tgl";
             worksheet.getCell(`C${startRowTable}`).value = "NO. FAKTUR"; worksheet.getCell(`D${startRowTable}`).value = "NAMA BARANG";
@@ -162,7 +163,8 @@ export default function UserProfitPage() {
             if (error || !data) { alert('Gagal mengambil data: ' + error); setLoading(false); return; }
 
             const doc = new jsPDF('l', 'mm', 'a4');
-            const startY = applyPDFHeader(doc, `Laporan Pembagian Laba (${activeTab}): ${periodeName}`);
+            const logoBase64 = await getLogoBase64();
+            const startY = applyPDFHeader(doc, `Laporan Pembagian Laba (${activeTab}): ${periodeName}`, logoBase64);
 
             doc.setFontSize(10);
             const subTitleY = startY;

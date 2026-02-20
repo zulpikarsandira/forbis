@@ -13,7 +13,7 @@ import * as XLSX from 'xlsx'; // Leaving for fallback if needed, but primary is 
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { applyExcelHeader, applyPDFHeader } from '@/lib/export-utils';
+import { applyExcelHeader, applyPDFHeader, getLogoBase64 } from '@/lib/export-utils';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -126,8 +126,10 @@ export default function ProfitPage() {
                 views: [{ state: 'frozen', xSplit: 0, ySplit: 2 }]
             });
 
+            const logoBase64 = await getLogoBase64();
+
             // --- 0. Apply Official Header ---
-            const startRowTable = applyExcelHeader(worksheet, `Laporan Pembagian Laba ${activeTab} - ${periodeName}`, 'V');
+            const startRowTable = applyExcelHeader(workbook, worksheet, `Laporan Pembagian Laba ${activeTab} - ${periodeName}`, 'V', logoBase64);
 
             // --- 1. Define Columns & Headers ---
             // Row 1: Merged Headers
@@ -331,8 +333,9 @@ export default function ProfitPage() {
             }
 
             const doc = new jsPDF('l', 'mm', 'a4'); // Landscape
+            const logoBase64 = await getLogoBase64();
 
-            const startY = applyPDFHeader(doc, `Laporan Pembagian Laba (${activeTab}): ${periodeName}`);
+            const startY = applyPDFHeader(doc, `Laporan Pembagian Laba (${activeTab}): ${periodeName}`, logoBase64);
 
             doc.setFontSize(10);
             const subTitleY = startY;

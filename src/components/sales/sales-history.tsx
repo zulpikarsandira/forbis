@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { applyExcelHeader, applyPDFHeader } from '@/lib/export-utils';
+import { applyExcelHeader, applyPDFHeader, getLogoBase64 } from '@/lib/export-utils';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -44,8 +44,9 @@ const toLocalDate = (dateStr: string) => {
 async function exportExcelForKategori(data: Sale[], kategori: string, date: string, variant: 'orange' | 'blue') {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet(`Laporan ${kategori}`);
+    const logoBase64 = await getLogoBase64();
 
-    const startRow = applyExcelHeader(worksheet, `Laporan Penjualan - ${kategori}`, 'F');
+    const startRow = applyExcelHeader(workbook, worksheet, `Laporan Penjualan`, 'F', logoBase64);
 
     const headerRow = worksheet.getRow(startRow);
     headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
@@ -88,12 +89,13 @@ async function exportExcelForKategori(data: Sale[], kategori: string, date: stri
     window.URL.revokeObjectURL(url);
 }
 
-function exportPDFForKategori(data: Sale[], kategori: string, date: string, variant: 'orange' | 'blue') {
+async function exportPDFForKategori(data: Sale[], kategori: string, date: string, variant: 'orange' | 'blue') {
     const doc = new jsPDF();
     const printDate = new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     const printNumber = `INV-${Date.now().toString().slice(-6)}`;
+    const logoBase64 = await getLogoBase64();
 
-    const startY = applyPDFHeader(doc, `Laporan Penjualan - ${kategori}`);
+    const startY = applyPDFHeader(doc, `Laporan Penjualan`, logoBase64);
 
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     doc.text(`No. Cetak: ${printNumber}`, 15, startY);

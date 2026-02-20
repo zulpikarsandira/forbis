@@ -8,7 +8,7 @@ import ExcelJS from 'exceljs'; // Use ExcelJS for styling
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getAllProducts } from '@/lib/actions/products';
-import { applyExcelHeader, applyPDFHeader } from '@/lib/export-utils';
+import { applyExcelHeader, applyPDFHeader, getLogoBase64 } from '@/lib/export-utils';
 import {
     Dialog,
     DialogContent,
@@ -56,6 +56,7 @@ export function ExportProductButton() {
 
             // --- EXCELJS IMPLEMENTATION ---
             const fileName = `Export_Barang_${new Date().toISOString().split('T')[0]}.${format}`;
+            const logoBase64 = await getLogoBase64();
 
             if (format === 'xlsx') {
                 // --- EXCELJS IMPLEMENTATION ---
@@ -82,7 +83,7 @@ export function ExportProductButton() {
                     ];
                 }
 
-                const startRow = applyExcelHeader(worksheet, 'DATA BARANG', template === 'lengkap' ? 'H' : 'D');
+                const startRow = applyExcelHeader(workbook, worksheet, 'DATA BARANG', template === 'lengkap' ? 'H' : 'D', logoBase64);
 
                 // Styling Header
                 const headerRow = worksheet.getRow(startRow);
@@ -138,7 +139,7 @@ export function ExportProductButton() {
                 // --- PDF IMPLEMENTATION ---
                 const doc = new jsPDF();
 
-                const startY = applyPDFHeader(doc, 'DATA BARANG');
+                const startY = applyPDFHeader(doc, 'DATA BARANG', logoBase64);
 
                 const headIndices = template === 'lengkap'
                     ? [['Kode', 'Nama', 'Jenis', 'Suplier', 'Modal', 'Jual', 'Stok']]
