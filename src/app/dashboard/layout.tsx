@@ -14,7 +14,8 @@ import {
     PieChart,
     LogOut,
     Rocket,
-    Settings // Added Settings
+    Settings,
+    DatabaseBackup
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -94,7 +95,8 @@ export default function DashboardLayout({
                                 { href: '/dashboard/products', label: 'Data Barang', icon: Package },
                                 { href: '/dashboard/sales', label: 'Entry Penjualan', icon: ShoppingCart },
                                 { href: '/dashboard/profit', label: 'Pembagian Laba', icon: PieChart },
-                                { href: '/dashboard/settings', label: 'Pengaturan & Profil', icon: Settings }, // Added Profile
+                                { href: '/dashboard/backup', label: 'Backup & Restore', icon: DatabaseBackup },
+                                { href: '/dashboard/settings', label: 'Pengaturan & Profil', icon: Settings },
                             ].map(({ href, label, icon: Icon }) => {
                                 const isActive = pathname === href;
                                 return (

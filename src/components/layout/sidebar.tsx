@@ -12,7 +12,8 @@ import {
     Settings,
     LogOut,
     Menu,
-    Rocket
+    Rocket,
+    DatabaseBackup
 } from 'lucide-react';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client'; // Import client
@@ -26,6 +27,7 @@ export function Sidebar() {
         { href: '/dashboard/products', label: 'Data Barang', icon: Package },
         { href: '/dashboard/sales', label: 'Entry Penjualan', icon: ShoppingCart },
         { href: '/dashboard/profit', label: 'Pembagian Laba', icon: PieChart },
+        { href: '/dashboard/backup', label: 'Backup & Restore', icon: DatabaseBackup },
     ];
 
     return (
