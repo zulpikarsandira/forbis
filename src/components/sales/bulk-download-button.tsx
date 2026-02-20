@@ -68,6 +68,7 @@ export function BulkDownloadInvoiceButton({ data, kategori, variant }: BulkDownl
                 sale.tanggal,
                 sale.nama,
                 sale.jumlah,
+                `Rp ${sale.jumlah > 0 ? Math.round(sale.total_harga / sale.jumlah).toLocaleString('id-ID') : 0}`,
                 `Rp ${sale.total_harga.toLocaleString('id-ID')}`
             ])
 
@@ -76,7 +77,7 @@ export function BulkDownloadInvoiceButton({ data, kategori, variant }: BulkDownl
             // @ts-ignore
             autoTable(doc, {
                 startY: 60,
-                head: [['No', 'Tanggal', 'Nama Barang', 'Qty', 'Total Harga']],
+                head: [['No', 'Tanggal', 'Nama Barang', 'Qty', 'Harga', 'Total Harga']],
                 body: tableData,
                 theme: 'striped',
                 headStyles: {
@@ -85,7 +86,7 @@ export function BulkDownloadInvoiceButton({ data, kategori, variant }: BulkDownl
                     fontStyle: 'bold'
                 },
                 foot: [[
-                    '', '', 'TOTAL', '',
+                    '', '', 'TOTAL', '', '',
                     `Rp ${totalHarga.toLocaleString('id-ID')}`
                 ]],
                 footStyles: {

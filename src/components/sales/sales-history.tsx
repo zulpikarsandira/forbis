@@ -89,7 +89,7 @@ function exportPDFForKategori(data: Sale[], kategori: string, date: string, vari
     doc.text('Jl. Raya Cimanggung No. 123', 105, 25, { align: 'center' });
     doc.setLineWidth(0.5); doc.line(15, 30, 195, 30);
     doc.setFontSize(16); doc.setFont('helvetica', 'bold');
-    doc.text('LAPORAN PENJUALAN', 105, 42, { align: 'center' });
+    doc.text('INVOICE', 105, 42, { align: 'center' });
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     doc.text(`No. Cetak: ${printNumber}`, 15, 50);
     doc.text(`Kategori: ${kategori}`, 15, 55);
@@ -100,11 +100,15 @@ function exportPDFForKategori(data: Sale[], kategori: string, date: string, vari
     // @ts-ignore
     autoTable(doc, {
         startY: 60,
-        head: [['No', 'Tanggal', 'Nama Barang', 'Qty', 'Total Harga']],
-        body: data.map((s, i) => [i + 1, s.tanggal, s.nama, s.jumlah, `Rp ${s.total_harga.toLocaleString('id-ID')}`]),
+        head: [['No', 'Tanggal', 'Nama Barang', 'Qty', 'Harga', 'Total Harga']],
+        body: data.map((s, i) => [
+            i + 1, s.tanggal, s.nama, s.jumlah,
+            `Rp ${s.jumlah > 0 ? Math.round(s.total_harga / s.jumlah).toLocaleString('id-ID') : 0}`,
+            `Rp ${s.total_harga.toLocaleString('id-ID')}`
+        ]),
         theme: 'striped',
         headStyles: { fillColor: variant === 'orange' ? [249, 115, 22] : [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold' },
-        foot: [['', '', 'TOTAL', '', `Rp ${totalHarga.toLocaleString('id-ID')}`]],
+        foot: [['', '', 'TOTAL', '', '', `Rp ${totalHarga.toLocaleString('id-ID')}`]],
         footStyles: { fillColor: [241, 245, 249], textColor: [0, 0, 0], fontStyle: 'bold' }
     });
 
