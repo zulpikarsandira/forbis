@@ -70,6 +70,53 @@ export async function getSales(dateFrom?: string, dateTo?: string) {
     return { data: data as Sale[] };
 }
 
+// Get sales for TODAY only
+export async function getTodaySales() {
+    const supabase = await createSupabaseServerClient();
+    const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local timezone
+
+    const { data, error } = await supabase
+        .from('barang_laku')
+        .select('*')
+        .eq('tanggal', today)
+        .order('id', { ascending: false });
+
+    if (error) return { data: [], error: error.message };
+    return { data: data as Sale[], today };
+}
+
+// Get list of unique dates that have sales data (excluding today)
+export async function getHistoryDates() {
+    const supabase = await createSupabaseServerClient();
+    const today = new Date().toLocaleDateString('en-CA');
+
+    const { data, error } = await supabase
+        .from('barang_laku')
+        .select('tanggal')
+        .neq('tanggal', today)
+        .order('tanggal', { ascending: false });
+
+    if (error) return { dates: [] };
+
+    // Get unique dates
+    const uniqueDates = [...new Set(data.map(d => d.tanggal))] as string[];
+    return { dates: uniqueDates };
+}
+
+// Get sales for a specific date (for history view)
+export async function getSalesByDate(date: string) {
+    const supabase = await createSupabaseServerClient();
+
+    const { data, error } = await supabase
+        .from('barang_laku')
+        .select('*')
+        .eq('tanggal', date)
+        .order('id', { ascending: false });
+
+    if (error) return { data: [], error: error.message };
+    return { data: data as Sale[] };
+}
+
 export async function createSale(formData: FormData) {
     const supabase = await createSupabaseServerClient();
 
