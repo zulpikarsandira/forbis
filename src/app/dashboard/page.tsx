@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 
 import { getDashboardStats } from '@/lib/actions/dashboard';
 import { PurpleStatCard } from '@/components/dashboard/purple-stat-card';
@@ -28,20 +27,6 @@ export default async function DashboardPage() {
 
     return (
         <div className="space-y-8">
-            {/* Banner Section */}
-            <div className="w-full max-w-4xl relative rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 bg-indigo-900 group">
-                <div className="h-48 md:h-64 w-full relative">
-                    <Image
-                        src="/images/WhatsApp Image 2026-02-18 at 12.36.56.jpeg"
-                        alt="Dashboard Banner"
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
-                        priority
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
-                </div>
-            </div>
-
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-2xl font-bold tracking-tight text-gray-900">Statistik Penjualan</h1>
