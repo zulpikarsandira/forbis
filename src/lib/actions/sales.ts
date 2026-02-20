@@ -212,3 +212,23 @@ export async function deleteSale(id: number, nama: string, jumlah: number) {
     revalidatePath('/dashboard/products');
     return { success: true };
 }
+
+// Delete a history record WITHOUT touching stock (for history management)
+export async function deleteHistorySale(id: number) {
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.from('barang_laku').delete().eq('id', id);
+    if (error) return { error: error.message };
+    return { success: true };
+}
+
+// Restore a previously deleted history record (upsert only, no stock change)
+export async function restoreHistorySale(sale: Omit<Sale, never>) {
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.from('barang_laku').upsert(
+        { id: sale.id, tanggal: sale.tanggal, nama: sale.nama, jumlah: sale.jumlah, total_harga: sale.total_harga, laba: sale.laba, kategori: sale.kategori },
+        { onConflict: 'id' }
+    );
+    if (error) return { error: error.message };
+    return { success: true };
+}
+
