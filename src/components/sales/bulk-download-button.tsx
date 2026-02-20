@@ -125,6 +125,7 @@ export function BulkDownloadInvoiceButton({ data, kategori, variant }: BulkDownl
                 { header: 'Tanggal', key: 'tanggal', width: 15 },
                 { header: 'Nama Barang', key: 'nama', width: 30 },
                 { header: 'Qty', key: 'jumlah', width: 10 },
+                { header: 'Harga', key: 'harga', width: 15 },
                 { header: 'Total Harga', key: 'total', width: 15 },
             ]
 
@@ -145,6 +146,7 @@ export function BulkDownloadInvoiceButton({ data, kategori, variant }: BulkDownl
                     tanggal: sale.tanggal,
                     nama: sale.nama,
                     jumlah: sale.jumlah,
+                    harga: sale.jumlah > 0 ? Math.round(sale.total_harga / sale.jumlah) : 0,
                     total: sale.total_harga
                 })
 
@@ -173,6 +175,7 @@ export function BulkDownloadInvoiceButton({ data, kategori, variant }: BulkDownl
                 tanggal: '',
                 nama: 'TOTAL',
                 jumlah: '',
+                harga: '',
                 total: totalHarga
             })
 

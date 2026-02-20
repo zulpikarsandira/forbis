@@ -39,6 +39,7 @@ async function exportExcelForKategori(data: Sale[], kategori: string, date: stri
         { header: 'Tanggal', key: 'tanggal', width: 15 },
         { header: 'Nama Barang', key: 'nama', width: 30 },
         { header: 'Qty', key: 'jumlah', width: 10 },
+        { header: 'Harga', key: 'harga', width: 15 },
         { header: 'Total Harga', key: 'total', width: 15 },
     ];
 
@@ -51,7 +52,11 @@ async function exportExcelForKategori(data: Sale[], kategori: string, date: stri
     headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
     data.forEach((sale, index) => {
-        const row = worksheet.addRow({ no: index + 1, tanggal: sale.tanggal, nama: sale.nama, jumlah: sale.jumlah, total: sale.total_harga });
+        const row = worksheet.addRow({
+            no: index + 1, tanggal: sale.tanggal, nama: sale.nama, jumlah: sale.jumlah,
+            harga: sale.jumlah > 0 ? Math.round(sale.total_harga / sale.jumlah) : 0,
+            total: sale.total_harga
+        });
         row.eachCell((cell, colNumber) => {
             cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
             if (colNumber === 1 || colNumber === 4) cell.alignment = { horizontal: 'center' };
@@ -60,7 +65,7 @@ async function exportExcelForKategori(data: Sale[], kategori: string, date: stri
     });
 
     const totalHarga = data.reduce((sum, s) => sum + s.total_harga, 0);
-    const totalRow = worksheet.addRow({ no: '', tanggal: '', nama: 'TOTAL', jumlah: '', total: totalHarga });
+    const totalRow = worksheet.addRow({ no: '', tanggal: '', nama: 'TOTAL', jumlah: '', harga: '', total: totalHarga });
     totalRow.eachCell((cell, colNumber) => {
         cell.font = { bold: true };
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
