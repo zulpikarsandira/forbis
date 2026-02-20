@@ -148,6 +148,7 @@ export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
     const [filterKategori, setFilterKategori] = useState<'Semua' | 'Dapur' | 'Warung'>('Semua');
     const [showTrash, setShowTrash] = useState(false);
     const [loadingAction, setLoadingAction] = useState<number | null>(null);
+    const [triggerFetch, setTriggerFetch] = useState(0);
 
     // Fetch data if initialSales not provided
     // Fetch data
@@ -200,6 +201,7 @@ export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
         if (res.success) {
             // Update local state
             setFetchedSales(prev => prev.map(s => s.id === id ? { ...s, is_deleted: false } : s));
+            setTriggerFetch(prev => prev + 1);
         } else {
             alert('Gagal mengembalikan: ' + res.error);
         }
@@ -212,6 +214,7 @@ export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
         const res = await softDeleteHistorySale(id);
         if (res.success) {
             setFetchedSales(prev => prev.map(s => s.id === id ? { ...s, is_deleted: true } : s));
+            setTriggerFetch(prev => prev + 1);
         } else {
             alert('Gagal menghapus: ' + res.error);
         }
@@ -224,6 +227,7 @@ export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
         const res = await hardDeleteHistorySale(id);
         if (res.success) {
             setFetchedSales(prev => prev.filter(s => s.id !== id));
+            setTriggerFetch(prev => prev + 1);
             alert('Berhasil dihapus permanen');
         } else {
             alert('Gagal menghapus: ' + res.error);
