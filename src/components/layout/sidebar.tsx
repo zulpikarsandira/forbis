@@ -32,7 +32,7 @@ export function Sidebar() {
     ];
 
     return (
-        <aside className="bg-sidebar hidden lg:flex flex-col w-64 h-screen sticky top-0 border-r border-sidebar-border shadow-sm z-20">
+        <aside className="bg-sidebar hidden lg:flex flex-col w-64 h-screen sticky top-0 border-r border-border shadow-sm z-20 transition-all duration-300">
             {/* Logo */}
             <div className="h-20 flex items-center px-8">
                 <img
@@ -72,7 +72,7 @@ export function Sidebar() {
             </nav>
 
             {/* Theme Toggle & Logout Button */}
-            <div className="p-4 space-y-4 border-t border-sidebar-border">
+            <div className="p-4 space-y-4 border-t border-border mt-auto">
                 <div className="px-4">
                     <ThemeToggle />
                 </div>

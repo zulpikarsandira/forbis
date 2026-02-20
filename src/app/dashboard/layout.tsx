@@ -47,7 +47,7 @@ export default function DashboardLayout({
             <Sidebar />
 
             {/* Mobile Header */}
-            <div className="lg:hidden fixed top-0 w-full bg-card z-50 border-b border-border p-4 flex justify-between items-center shadow-sm">
+            <div className="lg:hidden fixed top-0 w-full bg-card/80 backdrop-blur-md z-50 border-b border-border p-4 flex justify-between items-center shadow-sm">
                 <div className="flex items-center gap-3">
                     <img
                         src="/images/1000075381-removebg-preview.png"
@@ -109,7 +109,7 @@ export default function DashboardLayout({
                                             className={cn(
                                                 "flex items-center px-4 py-3.5 rounded-2xl transition-all border border-transparent",
                                                 isActive
-                                                    ? "text-primary bg-primary/10 border-primary/20 font-semibold"
+                                                    ? "text-primary bg-primary/10 border-primary/10 font-semibold"
                                                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
                                             )}
                                         >
