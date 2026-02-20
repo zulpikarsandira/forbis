@@ -112,6 +112,7 @@ export function BulkDownloadInvoiceButton({
             const startY = applyPDFHeader(doc, `INVOICE`, logoBase64)
             const invoiceNo = `INV-${Date.now().toString().slice(-6)}`
             const totalSum = sales.reduce((acc, sale) => acc + sale.total_harga, 0)
+            const totalQtySum = sales.reduce((acc, sale) => acc + sale.jumlah, 0)
 
             doc.setFontSize(10)
             doc.text(`No. Invoice: ${invoiceNo}`, 14, startY)
@@ -129,7 +130,9 @@ export function BulkDownloadInvoiceButton({
                     sale.total_harga.toLocaleString('id-ID')
                 ]),
                 foot: [[
-                    { content: 'TOTAL KESELURUHAN', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240] } },
+                    { content: 'TOTAL KESELURUHAN', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240] } },
+                    { content: totalQtySum.toString(), styles: { halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240] } },
+                    { content: '', styles: { fillColor: [240, 240, 240] } },
                     { content: `Rp ${totalSum.toLocaleString('id-ID')}`, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240] } }
                 ]],
                 theme: 'grid',
@@ -141,8 +144,8 @@ export function BulkDownloadInvoiceButton({
 
             const finalY = (doc as any).lastAutoTable.finalY || startY + 50
             doc.setFontSize(10)
-            doc.setFont('helvetica', 'italic')
-            doc.text('Thank you for your business!', 105, finalY + 15, { align: 'center' })
+            doc.setFont('helvetica', 'normal')
+            doc.text('Terima Kasih Atas Kunjungan Anda', 105, finalY + 15, { align: 'center' })
 
             doc.save(`Invoice_${kategori}_${format(new Date(), 'yyyy-MM-dd')}.pdf`)
         } catch (error) {

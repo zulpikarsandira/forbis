@@ -134,8 +134,8 @@ async function exportPDFForKategori(data: Sale[], kategori: string, date: string
 
     const finalY = (doc as any).lastAutoTable.finalY || startY + 50
     doc.setFontSize(10)
-    doc.setFont('helvetica', 'italic')
-    doc.text('Thank you for your business!', 105, finalY + 15, { align: 'center' })
+    doc.setFont('helvetica', 'normal')
+    doc.text('Terima Kasih Atas Kunjungan Anda', 105, finalY + 15, { align: 'center' })
 
     doc.save(`Laporan_Penjualan_${kategori}_${date}.pdf`);
 }
