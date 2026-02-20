@@ -80,29 +80,28 @@ export async function getTodaySales() {
         .from('barang_laku')
         .select('*')
         .eq('tanggal', today)
-        .eq('is_deleted', false)
         .order('id', { ascending: false });
 
-    if (error) return { data: [], error: error.message };
-    return { data: data as Sale[], today };
+    if (error) return { data: [], error: error.message, today };
+    // Filter out soft-deleted rows in app code (is_deleted may be undefined for old rows)
+    const active = (data as Sale[]).filter(s => !s.is_deleted);
+    return { data: active, today };
 }
 
-// Get list of unique dates that have sales data (excluding today)
+// Get list of unique dates that have sales data (any date, including today)
 export async function getHistoryDates() {
     const supabase = await createSupabaseServerClient();
-    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
 
     const { data, error } = await supabase
         .from('barang_laku')
-        .select('tanggal')
-        .neq('tanggal', today)
-        .eq('is_deleted', false) // Only show dates with active sales
+        .select('tanggal, is_deleted')
         .order('tanggal', { ascending: false });
 
     if (error) return { dates: [] };
 
-    // Get unique dates
-    const uniqueDates = [...new Set(data.map(d => d.tanggal))] as string[];
+    // Filter out deleted rows in app code, then get unique dates
+    const active = data.filter(d => !d.is_deleted);
+    const uniqueDates = [...new Set(active.map(d => d.tanggal))] as string[];
     return { dates: uniqueDates };
 }
 
@@ -114,11 +113,14 @@ export async function getSalesByDate(date: string, onlyDeleted = false) {
         .from('barang_laku')
         .select('*')
         .eq('tanggal', date)
-        .eq('is_deleted', onlyDeleted)
         .order('id', { ascending: false });
 
     if (error) return { data: [], error: error.message };
-    return { data: data as Sale[] };
+    // Filter in app code: is_deleted undefined (old rows) treated as false = not deleted
+    const filtered = (data as Sale[]).filter(s =>
+        onlyDeleted ? s.is_deleted === true : !s.is_deleted
+    );
+    return { data: filtered };
 }
 
 export async function createSale(formData: FormData) {

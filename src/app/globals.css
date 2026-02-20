@@ -403,18 +403,24 @@
   -ms-transform: translateY(-50%);
   transform: translateY(-50%);
 }
-/* Calendar Highlighting */
-.rdp-day_past:not(.rdp-day_selected):not(.rdp-day_outside) {
-  background-color: color-mix(in srgb, #10B981 15%, transparent) !important;
-  color: #059669 !important;
+
+/* Calendar Highlighting - only dates with actual sales data */
+.rdp-day_hasData:not(.rdp-day_selected):not(.rdp-day_outside) {
+  background-color: color-mix(in srgb, #10B981 20%, transparent) !important;
+  color: #047857 !important;
   font-weight: 700 !important;
   border-radius: 8px !important;
+  position: relative;
 }
 
-.rdp-day_today_custom:not(.rdp-day_selected):not(.rdp-day_outside) {
-  background-color: color-mix(in srgb, #3B82F6 15%, transparent) !important;
-  color: #2563EB !important;
-  font-weight: 700 !important;
-  border: 2px solid #3B82F6 !important;
-  border-radius: 8px !important;
+.rdp-day_hasData:not(.rdp-day_selected):not(.rdp-day_outside)::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #10B981;
 }

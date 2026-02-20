@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { softDeleteHistorySale, restoreHistorySale, hardDeleteHistorySale, getSalesByDate, type Sale } from '@/lib/actions/sales';
+import { softDeleteHistorySale, restoreHistorySale, hardDeleteHistorySale, getSalesByDate, getHistoryDates, type Sale } from '@/lib/actions/sales';
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -149,6 +149,22 @@ export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
     const [showTrash, setShowTrash] = useState(false);
     const [loadingAction, setLoadingAction] = useState<number | null>(null);
     const [triggerFetch, setTriggerFetch] = useState(0);
+    const [historyDates, setHistoryDates] = useState<Date[]>([]);
+
+    // Fetch which dates have data, for calendar marking
+    useEffect(() => {
+        const loadDates = async () => {
+            const res = await getHistoryDates();
+            if (res.dates) {
+                setHistoryDates(res.dates.map(d => {
+                    // Parse YYYY-MM-DD as local date (avoid UTC shift)
+                    const [y, m, day] = d.split('-').map(Number);
+                    return new Date(y, m - 1, day);
+                }));
+            }
+        };
+        loadDates();
+    }, [triggerFetch]);
 
     // Fetch data if initialSales not provided
     // Fetch data
@@ -170,21 +186,15 @@ export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
     const itemsPerPage = 10;
 
     const filteredSales = useMemo(() => {
-        return activeSales.filter(sale => {
-            // If we fetched by date, we don't strictly need to check date here, 
-            // but if initialSales is provided (from parent), we do.
-            const saleDate = new Date(sale.tanggal).toDateString();
-            const selectedDate = date.toDateString();
-            const matchesDate = saleDate === selectedDate;
-
+        // Data is already pre-filtered by date from the server.
+        // We only need to apply search and category filters here.
+        return fetchedSales.filter(sale => {
             const matchesSearch = sale.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 String(sale.id).toLowerCase().includes(searchTerm.toLowerCase());
             const matchesKategori = filterKategori === 'Semua' || sale.kategori === filterKategori;
-            const matchesTrash = showTrash ? sale.is_deleted : !sale.is_deleted;
-
-            return matchesDate && matchesSearch && matchesKategori && matchesTrash;
+            return matchesSearch && matchesKategori;
         });
-    }, [activeSales, date, searchTerm, filterKategori, showTrash]);
+    }, [fetchedSales, searchTerm, filterKategori]);
 
     const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
     const currentSales = filteredSales.slice(
@@ -255,12 +265,10 @@ export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
                                     onSelect={(d) => d && setDate(d)}
                                     initialFocus
                                     modifiers={{
-                                        past: { before: new Date() },
-                                        today_custom: new Date()
+                                        hasData: historyDates
                                     }}
                                     modifiersClassNames={{
-                                        past: "rdp-day_past",
-                                        today_custom: "rdp-day_today_custom"
+                                        hasData: "rdp-day_hasData"
                                     }}
                                 />
                             </PopoverContent>
