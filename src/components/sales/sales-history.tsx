@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { getSalesByDate, getHistoryDates, type Sale } from '@/lib/actions/sales';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Calendar, FileDown, History, ChevronDown, ReceiptText, Loader2, FileSpreadsheet, FileText } from 'lucide-react';
+import { FileDown, History, ChevronDown, ReceiptText, Loader2, FileSpreadsheet, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
@@ -17,11 +17,18 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { DayPicker } from 'react-day-picker';
+import 'react-day-picker/dist/style.css';
 
 const formatRupiah = (n: number) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 
-// ── Reusable export functions matching bulk-download-button format ──────────
+const toLocalDate = (dateStr: string) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d);
+};
+
+// ── Export utilities ─────────────────────────────────────────────────────────
 
 async function exportExcelForKategori(data: Sale[], kategori: string, date: string, variant: 'orange' | 'blue') {
     const workbook = new ExcelJS.Workbook();
@@ -38,25 +45,15 @@ async function exportExcelForKategori(data: Sale[], kategori: string, date: stri
     const headerRow = worksheet.getRow(1);
     headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     headerRow.fill = {
-        type: 'pattern',
-        pattern: 'solid',
+        type: 'pattern', pattern: 'solid',
         fgColor: { argb: variant === 'orange' ? 'FFF97316' : 'FF2563EB' }
     };
     headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
     data.forEach((sale, index) => {
-        const row = worksheet.addRow({
-            no: index + 1,
-            tanggal: sale.tanggal,
-            nama: sale.nama,
-            jumlah: sale.jumlah,
-            total: sale.total_harga
-        });
+        const row = worksheet.addRow({ no: index + 1, tanggal: sale.tanggal, nama: sale.nama, jumlah: sale.jumlah, total: sale.total_harga });
         row.eachCell((cell, colNumber) => {
-            cell.border = {
-                top: { style: 'thin' }, left: { style: 'thin' },
-                bottom: { style: 'thin' }, right: { style: 'thin' }
-            };
+            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
             if (colNumber === 1 || colNumber === 4) cell.alignment = { horizontal: 'center' };
             else if (colNumber >= 5) { cell.numFmt = '#,##0'; cell.alignment = { horizontal: 'right' }; }
         });
@@ -87,72 +84,45 @@ function exportPDFForKategori(data: Sale[], kategori: string, date: string, vari
     const printDate = new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     const printNumber = `INV-${Date.now().toString().slice(-6)}`;
 
-    doc.setFontSize(18);
-    doc.text('FORBIS CIMANGGUNG', 105, 15, { align: 'center' });
-    doc.setFontSize(10);
-    doc.text('Koperasi Karyawan & Umum', 105, 20, { align: 'center' });
+    doc.setFontSize(18); doc.text('FORBIS CIMANGGUNG', 105, 15, { align: 'center' });
+    doc.setFontSize(10); doc.text('Koperasi Karyawan & Umum', 105, 20, { align: 'center' });
     doc.text('Jl. Raya Cimanggung No. 123', 105, 25, { align: 'center' });
-    doc.setLineWidth(0.5);
-    doc.line(15, 30, 195, 30);
-
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
+    doc.setLineWidth(0.5); doc.line(15, 30, 195, 30);
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold');
     doc.text('LAPORAN PENJUALAN', 105, 42, { align: 'center' });
-
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     doc.text(`No. Cetak: ${printNumber}`, 15, 50);
     doc.text(`Kategori: ${kategori}`, 15, 55);
     doc.text(`Tanggal: ${printDate}`, 195, 50, { align: 'right' });
     doc.text(`Total Transaksi: ${data.length}`, 195, 55, { align: 'right' });
 
     const totalHarga = data.reduce((sum, s) => sum + s.total_harga, 0);
-    const tableData = data.map((s, i) => [i + 1, s.tanggal, s.nama, s.jumlah, `Rp ${s.total_harga.toLocaleString('id-ID')}`]);
-
     // @ts-ignore
     autoTable(doc, {
         startY: 60,
         head: [['No', 'Tanggal', 'Nama Barang', 'Qty', 'Total Harga']],
-        body: tableData,
+        body: data.map((s, i) => [i + 1, s.tanggal, s.nama, s.jumlah, `Rp ${s.total_harga.toLocaleString('id-ID')}`]),
         theme: 'striped',
-        headStyles: {
-            fillColor: variant === 'orange' ? [249, 115, 22] : [37, 99, 235],
-            textColor: [255, 255, 255],
-            fontStyle: 'bold'
-        },
+        headStyles: { fillColor: variant === 'orange' ? [249, 115, 22] : [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold' },
         foot: [['', '', 'TOTAL', '', `Rp ${totalHarga.toLocaleString('id-ID')}`]],
         footStyles: { fillColor: [241, 245, 249], textColor: [0, 0, 0], fontStyle: 'bold' }
     });
 
     const finalY = (doc as any).lastAutoTable.finalY + 10;
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(9); doc.setFont('helvetica', 'italic');
     doc.text('Dicetak secara otomatis oleh Sistem Forbis Cimanggung', 105, finalY + 10, { align: 'center' });
-
     doc.save(`Laporan_Penjualan_${kategori}_${date}.pdf`);
 }
 
-// ── Per-kategori table with export ──────────────────────────────────────────
+// ── Per-kategori table ───────────────────────────────────────────────────────
 
 function HistoryKategoriTable({ data, kategori, date, variant }: {
-    data: Sale[];
-    kategori: 'Dapur' | 'Warung';
-    date: string;
-    variant: 'orange' | 'blue';
+    data: Sale[]; kategori: 'Dapur' | 'Warung'; date: string; variant: 'orange' | 'blue';
 }) {
     const [exporting, setExporting] = useState(false);
 
-    const handleExcel = async () => {
-        setExporting(true);
-        await exportExcelForKategori(data, kategori, date, variant);
-        setExporting(false);
-    };
-
-    const handlePDF = () => {
-        setExporting(true);
-        exportPDFForKategori(data, kategori, date, variant);
-        setExporting(false);
-    };
+    const handleExcel = async () => { setExporting(true); await exportExcelForKategori(data, kategori, date, variant); setExporting(false); };
+    const handlePDF = () => { setExporting(true); exportPDFForKategori(data, kategori, date, variant); setExporting(false); };
 
     return (
         <div className="space-y-3">
@@ -164,14 +134,11 @@ function HistoryKategoriTable({ data, kategori, date, variant }: {
                     Penjualan {kategori}
                     <span className="ml-2 text-sm font-normal opacity-70">({data.length} transaksi)</span>
                 </h3>
-
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className={cn(
                             'gap-2 shadow-sm',
-                            variant === 'orange'
-                                ? 'border-orange-200 text-orange-700 hover:bg-orange-50'
-                                : 'border-blue-200 text-blue-700 hover:bg-blue-50'
+                            variant === 'orange' ? 'border-orange-200 text-orange-700 hover:bg-orange-50' : 'border-blue-200 text-blue-700 hover:bg-blue-50'
                         )} disabled={exporting || data.length === 0}>
                             {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
                             Cetak Laporan {kategori} <ChevronDown className="h-4 w-4" />
@@ -180,19 +147,15 @@ function HistoryKategoriTable({ data, kategori, date, variant }: {
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Pilih Format</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleExcel}>
-                            <FileSpreadsheet className="mr-2 h-4 w-4 text-green-600" /> Export Excel (.xlsx)
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handlePDF}>
-                            <FileText className="mr-2 h-4 w-4 text-red-600" /> Export PDF (.pdf)
-                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleExcel}><FileSpreadsheet className="mr-2 h-4 w-4 text-green-600" />Export Excel (.xlsx)</DropdownMenuItem>
+                        <DropdownMenuItem onClick={handlePDF}><FileText className="mr-2 h-4 w-4 text-red-600" />Export PDF (.pdf)</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
 
             <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                    <Table className="min-w-[600px]">
+                    <Table className="min-w-[500px]">
                         <TableHeader className="bg-gray-100/50">
                             <TableRow>
                                 <TableHead className="w-10">No</TableHead>
@@ -215,7 +178,7 @@ function HistoryKategoriTable({ data, kategori, date, variant }: {
                                 </TableRow>
                             )) : (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground italic">
+                                    <TableCell colSpan={5} className="h-20 text-center text-muted-foreground italic">
                                         <div className="flex flex-col items-center gap-2">
                                             <ReceiptText className="h-6 w-6 opacity-20" />
                                             <span>Tidak ada data {kategori} di tanggal ini.</span>
@@ -226,10 +189,8 @@ function HistoryKategoriTable({ data, kategori, date, variant }: {
                             {data.length > 0 && (
                                 <TableRow className="bg-gray-50 font-bold border-t-2">
                                     <TableCell colSpan={3} className="text-right text-gray-700">TOTAL</TableCell>
-                                    <TableCell className="text-center text-gray-700">{data.reduce((s, r) => s + r.jumlah, 0)}</TableCell>
-                                    <TableCell className="text-right font-mono text-gray-900">
-                                        {formatRupiah(data.reduce((s, r) => s + r.total_harga, 0))}
-                                    </TableCell>
+                                    <TableCell className="text-center">{data.reduce((s, r) => s + r.jumlah, 0)}</TableCell>
+                                    <TableCell className="text-right font-mono">{formatRupiah(data.reduce((s, r) => s + r.total_harga, 0))}</TableCell>
                                 </TableRow>
                             )}
                         </TableBody>
@@ -240,19 +201,19 @@ function HistoryKategoriTable({ data, kategori, date, variant }: {
     );
 }
 
-// ── Main History Component ───────────────────────────────────────────────────
+// ── Main Component ───────────────────────────────────────────────────────────
 
 export function SalesHistory() {
-    const [dates, setDates] = useState<string[]>([]);
+    const [historyDates, setHistoryDates] = useState<string[]>([]);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [sales, setSales] = useState<Sale[]>([]);
     const [loading, setLoading] = useState(false);
+    const [month, setMonth] = useState<Date>(new Date());
+
+    const today = new Date().toLocaleDateString('en-CA');
 
     useEffect(() => {
-        getHistoryDates().then(res => {
-            setDates(res.dates);
-            if (res.dates.length > 0) setSelectedDate(res.dates[0]);
-        });
+        getHistoryDates().then(res => setHistoryDates(res.dates));
     }, []);
 
     useEffect(() => {
@@ -264,56 +225,113 @@ export function SalesHistory() {
         });
     }, [selectedDate]);
 
+    // Convert string dates to Date objects for DayPicker modifiers
+    const historyDateObjects = historyDates.map(toLocalDate);
+    const todayDateObject = toLocalDate(today);
+
+    const handleDayClick = (day: Date, modifiers: Record<string, boolean>) => {
+        if (!modifiers.history && !modifiers.today) return; // only clickable if marked
+        const dateStr = day.toLocaleDateString('en-CA');
+        setSelectedDate(dateStr);
+    };
+
     const salesDapur = sales.filter(s => s.kategori === 'Dapur');
     const salesWarung = sales.filter(s => s.kategori === 'Warung' || !s.kategori);
 
-    if (dates.length === 0) {
-        return (
-            <div className="rounded-2xl border bg-white shadow-sm p-12 text-center text-muted-foreground">
-                <History className="h-10 w-10 mx-auto mb-3 opacity-20" />
-                <p className="font-medium">Belum ada data history.</p>
-                <p className="text-sm mt-1">Data hari-hari sebelumnya akan muncul di sini.</p>
-            </div>
-        );
-    }
-
     return (
-        <div className="space-y-6">
-            {/* Date Picker */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <div className="flex items-center gap-2 text-gray-700 font-semibold shrink-0">
-                    <Calendar className="h-4 w-4 text-primary" />
-                    <span>Pilih Tanggal:</span>
+        <div className="space-y-8">
+            <div className="flex flex-col lg:flex-row gap-8">
+                {/* Calendar Card */}
+                <div className="bg-white rounded-2xl border shadow-sm p-4 w-fit mx-auto lg:mx-0 shrink-0">
+                    <p className="text-sm font-medium text-gray-700 mb-3 px-1">Pilih tanggal untuk melihat data:</p>
+
+                    {/* Legend */}
+                    <div className="flex gap-4 mb-3 px-1 text-xs text-gray-500">
+                        <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" /> Hari ini
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" /> Ada data
+                        </span>
+                    </div>
+
+                    <style>{`
+                        .rdp-day_history { position: relative; }
+                        .rdp-day_history::after {
+                            content: '';
+                            position: absolute;
+                            bottom: 2px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            width: 6px;
+                            height: 6px;
+                            border-radius: 50%;
+                            background: #22c55e;
+                        }
+                        .rdp-day_today_active { position: relative; }
+                        .rdp-day_today_active::after {
+                            content: '';
+                            position: absolute;
+                            bottom: 2px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            width: 6px;
+                            height: 6px;
+                            border-radius: 50%;
+                            background: #3b82f6;
+                        }
+                        .rdp-day_history, .rdp-day_today_active {
+                            cursor: pointer !important;
+                            font-weight: 600;
+                        }
+                        .rdp-day_selected_custom {
+                            background: #f3f4f6 !important;
+                            border-radius: 8px;
+                            font-weight: 700;
+                        }
+                    `}</style>
+
+                    <DayPicker
+                        month={month}
+                        onMonthChange={setMonth}
+                        modifiers={{
+                            history: historyDateObjects,
+                            today_active: [todayDateObject],
+                            selected_custom: selectedDate ? [toLocalDate(selectedDate)] : [],
+                        }}
+                        modifiersClassNames={{
+                            history: 'rdp-day_history',
+                            today_active: 'rdp-day_today_active',
+                            selected_custom: 'rdp-day_selected_custom',
+                        }}
+                        onDayClick={handleDayClick}
+                        showOutsideDays={false}
+                    />
                 </div>
-                <div className="flex flex-wrap gap-2">
-                    {dates.map(date => (
-                        <button
-                            key={date}
-                            onClick={() => setSelectedDate(date)}
-                            className={cn(
-                                'px-3 py-1.5 text-sm rounded-xl border transition-all font-medium',
-                                selectedDate === date
-                                    ? 'bg-primary text-white border-primary shadow-md'
-                                    : 'bg-white text-gray-600 border-gray-200 hover:border-primary hover:text-primary'
-                            )}
-                        >
-                            {date}
-                        </button>
-                    ))}
+
+                {/* Right panel - info or table */}
+                <div className="flex-1 min-w-0">
+                    {!selectedDate ? (
+                        <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center text-muted-foreground rounded-2xl border border-dashed bg-gray-50/50 p-8">
+                            <History className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                            <p className="font-medium">Pilih tanggal di kalender</p>
+                            <p className="text-sm mt-1">Klik tanggal yang memiliki tanda ● untuk melihat data.</p>
+                        </div>
+                    ) : loading ? (
+                        <div className="flex justify-center items-center min-h-[200px]">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                    ) : (
+                        <div className="space-y-8">
+                            <p className="text-sm font-medium text-gray-600">
+                                Data penjualan: <strong className="text-gray-900">{selectedDate}</strong>
+                            </p>
+                            <HistoryKategoriTable data={salesDapur} kategori="Dapur" date={selectedDate} variant="orange" />
+                            <HistoryKategoriTable data={salesWarung} kategori="Warung" date={selectedDate} variant="blue" />
+                        </div>
+                    )}
                 </div>
             </div>
-
-            {/* Tables */}
-            {loading ? (
-                <div className="flex justify-center py-16">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-            ) : selectedDate ? (
-                <div className="space-y-10">
-                    <HistoryKategoriTable data={salesDapur} kategori="Dapur" date={selectedDate} variant="orange" />
-                    <HistoryKategoriTable data={salesWarung} kategori="Warung" date={selectedDate} variant="blue" />
-                </div>
-            ) : null}
         </div>
     );
 }
