@@ -13,7 +13,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, Save } from "lucide-react";
 import { createProduct, updateProduct, type Product } from '@/lib/actions/products';
 import { formatIDR, parseIDR } from '@/lib/utils/format';
 
