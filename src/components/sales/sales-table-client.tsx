@@ -1,11 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, ReceiptText } from "lucide-react"
+import { Plus, ReceiptText, Trash2, Loader2, CheckCircle2 } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { SalesForm } from "@/components/sales/sales-form"
-import { DeleteSaleButton } from "@/app/dashboard/sales/delete-button"
 import { PrintInvoiceButton } from "@/components/sales/print-invoice-button"
 import {
     Dialog,
@@ -27,11 +26,48 @@ interface SalesTableClientProps {
     kategori: 'Dapur' | 'Warung';
 }
 
-export function SalesTableClient({ data, title, variant, kategori }: SalesTableClientProps) {
+export function SalesTableClient({ data: initialData, title, variant, kategori }: SalesTableClientProps) {
     const [open, setOpen] = useState(false);
+    const [sales, setSales] = useState<Sale[]>(initialData);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+    // Keep in sync when parent data changes (e.g. Supabase realtime push)
+    // We only sync if the incoming data is different to avoid wiping local deletes
+    const prevDataRef = useState<Sale[]>(initialData);
+
+    const showSuccess = (msg: string) => {
+        setSuccessMessage(msg);
+        setTimeout(() => setSuccessMessage(null), 3000);
+    };
+
+    const handleDelete = async (id: number, nama: string, jumlah: number) => {
+        if (!confirm(`Yakin ingin menghapus transaksi "${nama}"?\nStok barang akan dikembalikan.`)) return;
+
+        setDeletingId(id);
+        const result = await deleteSale(id, nama, jumlah);
+        setDeletingId(null);
+
+        if (result?.error) {
+            alert('Gagal menghapus: ' + result.error);
+            return;
+        }
+
+        // Remove from local state immediately — no page refresh needed
+        setSales(prev => prev.filter(s => s.id !== id));
+        showSuccess(`Transaksi "${nama}" berhasil dihapus.`);
+    };
 
     return (
         <div className="space-y-4">
+            {/* Success Toast */}
+            {successMessage && (
+                <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                    <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                    <span className="text-sm font-medium">{successMessage}</span>
+                </div>
+            )}
+
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className={cn(
                     "text-xl font-bold px-4 py-2 rounded-lg border-l-4 shadow-sm inline-block whitespace-nowrap",
@@ -42,7 +78,7 @@ export function SalesTableClient({ data, title, variant, kategori }: SalesTableC
 
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                     <BulkDownloadInvoiceButton
-                        sales={data}
+                        sales={sales}
                         kategori={kategori}
                         variant={variant}
                     />
@@ -57,7 +93,6 @@ export function SalesTableClient({ data, title, variant, kategori }: SalesTableC
                         <DialogContent
                             className="w-[95vw] sm:max-w-[600px] p-0 rounded-2xl border-border bg-card shadow-2xl overflow-hidden"
                             onInteractOutside={(e) => {
-                                // If we are clicking inside a popover (like product list), don't close the dialog
                                 const isPopover = (e.target as HTMLElement)?.closest('[role="combobox"]') ||
                                     (e.target as HTMLElement)?.closest('[cmdk-list-wrapper]');
                                 if (isPopover) {
@@ -76,8 +111,6 @@ export function SalesTableClient({ data, title, variant, kategori }: SalesTableC
                                 <SalesForm
                                     defaultKategori={kategori}
                                     onSuccess={() => {
-                                        // Wait a bit for the user to see the success message in SalesForm
-                                        // before closing the dialog
                                         setTimeout(() => setOpen(false), 2000);
                                     }}
                                 />
@@ -102,8 +135,8 @@ export function SalesTableClient({ data, title, variant, kategori }: SalesTableC
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {data.length > 0 ? (
-                                data.map((sale) => (
+                            {sales.length > 0 ? (
+                                sales.map((sale) => (
                                     <TableRow key={sale.id} className="group hover:bg-muted/50 transition-colors">
                                         <TableCell className="text-muted-foreground whitespace-nowrap">{sale.tanggal}</TableCell>
                                         <TableCell className="font-semibold text-foreground whitespace-nowrap">{sale.nama}</TableCell>
@@ -122,7 +155,18 @@ export function SalesTableClient({ data, title, variant, kategori }: SalesTableC
                                             <DownloadInvoiceButton sale={sale} />
                                         </TableCell>
                                         <TableCell className="text-center">
-                                            <DeleteSaleButton id={sale.id} nama={sale.nama} jumlah={sale.jumlah} />
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                onClick={() => handleDelete(sale.id, sale.nama, sale.jumlah)}
+                                                disabled={deletingId === sale.id}
+                                            >
+                                                {deletingId === sale.id
+                                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                                    : <Trash2 className="h-4 w-4" />
+                                                }
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
                                 ))
