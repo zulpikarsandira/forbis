@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Download, Upload, Database, Clock, CheckCircle2, AlertTriangle, Loader2, RotateCcw, Shield } from 'lucide-react';
 import JSZip from 'jszip';
+import ExcelJS from 'exceljs';
 
 const STORAGE_KEY = 'forbis_backup_schedule';
 
@@ -82,11 +83,32 @@ export default function BackupPage() {
             const result = await getAllDataForBackup();
             if (result.error) { setStatus({ type: 'error', msg: result.error }); return; }
 
-            const zip = new JSZip();
             const d = result.data!;
-            zip.file('barang.json', JSON.stringify(d.barang, null, 2));
-            zip.file('barang_laku.json', JSON.stringify(d.barang_laku, null, 2));
-            zip.file('alokasi_laba.json', JSON.stringify(d.alokasi_laba, null, 2));
+            const zip = new JSZip();
+
+            // Helper to create Excel buffer
+            const createExcelBuffer = async (name: string, data: any[]) => {
+                const workbook = new ExcelJS.Workbook();
+                const worksheet = workbook.addWorksheet(name);
+
+                if (data.length > 0) {
+                    const headers = Object.keys(data[0]);
+                    worksheet.columns = headers.map(h => ({ header: h, key: h, width: 15 }));
+                    worksheet.addRows(data);
+
+                    // Style header
+                    const headerRow = worksheet.getRow(1);
+                    headerRow.font = { bold: true };
+                    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } };
+                }
+
+                return await workbook.xlsx.writeBuffer();
+            };
+
+            // Add Excel files to ZIP
+            zip.file('barang.xlsx', await createExcelBuffer('barang', d.barang));
+            zip.file('barang_laku.xlsx', await createExcelBuffer('barang_laku', d.barang_laku));
+            zip.file('alokasi_laba.xlsx', await createExcelBuffer('alokasi_laba', d.alokasi_laba));
             zip.file('backup_info.json', JSON.stringify(d.backup_info, null, 2));
 
             const blob = await zip.generateAsync({ type: 'blob' });
@@ -106,7 +128,8 @@ export default function BackupPage() {
                 const updated = { ...schedule, lastBackup: new Date().toISOString(), nextBackup: calcNextBackup(schedule.frequency, schedule.hour) };
                 saveSchedule(updated);
             }
-        } catch {
+        } catch (error) {
+            console.error('Backup error:', error);
             setStatus({ type: 'error', msg: 'Gagal membuat file backup.' });
         } finally {
             if (!auto) setDownloading(false);
@@ -132,12 +155,46 @@ export default function BackupPage() {
         try {
             const zip = new JSZip();
             const loaded = await zip.loadAsync(file);
-            const barang = JSON.parse(await (loaded.file('barang.json')?.async('string') ?? Promise.resolve('[]')));
-            const barang_laku = JSON.parse(await (loaded.file('barang_laku.json')?.async('string') ?? Promise.resolve('[]')));
-            const alokasi_laba = JSON.parse(await (loaded.file('alokasi_laba.json')?.async('string') ?? Promise.resolve('[]')));
+
+            const parseExcel = async (fileName: string) => {
+                const excelFile = loaded.file(fileName);
+                if (!excelFile) return [];
+
+                const buffer = await excelFile.async('arraybuffer');
+                const workbook = new ExcelJS.Workbook();
+                await workbook.xlsx.load(buffer);
+
+                const worksheet = workbook.worksheets[0];
+                if (!worksheet) return [];
+
+                const data: any[] = [];
+                const headers: string[] = [];
+
+                worksheet.getRow(1).eachCell((cell, colNumber) => {
+                    headers[colNumber] = cell.value?.toString() || '';
+                });
+
+                worksheet.eachRow((row, rowNumber) => {
+                    if (rowNumber === 1) return; // Skip header
+                    const item: any = {};
+                    row.eachCell((cell, colNumber) => {
+                        const key = headers[colNumber];
+                        if (key) item[key] = cell.value;
+                    });
+                    data.push(item);
+                });
+
+                return data;
+            };
+
+            const barang = await parseExcel('barang.xlsx');
+            const barang_laku = await parseExcel('barang_laku.xlsx');
+            const alokasi_laba = await parseExcel('alokasi_laba.xlsx');
+
             setRestorePreview({ barang: barang.length, barang_laku: barang_laku.length, alokasi_laba: alokasi_laba.length });
             setRestorePayload({ barang, barang_laku, alokasi_laba });
-        } catch {
+        } catch (error) {
+            console.error('Upload/Restore parse error:', error);
             setStatus({ type: 'error', msg: 'File tidak valid atau corrupt.' });
         }
         e.target.value = '';
@@ -171,8 +228,8 @@ export default function BackupPage() {
             {/* Status Banner */}
             {status && (
                 <div className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium ${status.type === 'success'
-                        ? 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20'
-                        : 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+                    ? 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20'
+                    : 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
                     }`}>
                     {status.type === 'success' ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <AlertTriangle className="h-4 w-4 shrink-0" />}
                     {status.msg}
@@ -187,14 +244,14 @@ export default function BackupPage() {
                         <Download className="h-5 w-5 text-blue-600" />
                         Backup Manual
                     </CardTitle>
-                    <CardDescription>Download seluruh data database sebagai file ZIP.</CardDescription>
+                    <CardDescription>Download seluruh data database sebagai file ZIP berisi file Excel (.xlsx).</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-3 gap-3 text-center text-sm">
                         {[
-                            { label: 'Data Barang', icon: '📦' },
-                            { label: 'Entry Penjualan', icon: '🧾' },
-                            { label: 'Alokasi Laba', icon: '💰' },
+                            { label: 'Data Barang (Excel)', icon: '📦' },
+                            { label: 'Penjualan (Excel)', icon: '🧾' },
+                            { label: 'Alokasi Laba (Excel)', icon: '💰' },
                         ].map(({ label, icon }) => (
                             <div key={label} className="rounded-xl bg-muted/50 border border-border p-3">
                                 <div className="text-2xl mb-1">{icon}</div>
@@ -216,7 +273,7 @@ export default function BackupPage() {
                         <Clock className="h-5 w-5 text-purple-600" />
                         Backup Otomatis
                     </CardTitle>
-                    <CardDescription>Jadwalkan backup otomatis. Aktif selama browser dibuka.</CardDescription>
+                    <CardDescription>Jadwalkan backup otomatis (Format Excel). Aktif selama browser dibuka.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
                     {/* Toggle */}
