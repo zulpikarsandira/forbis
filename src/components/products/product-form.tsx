@@ -98,9 +98,11 @@ export function ProductForm({ product, open: controlledOpen, onOpenChange: contr
                 <div className="h-2 w-full bg-primary" />
                 <div className="p-6">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-bold text-foreground">{product ? 'Edit Barang' : 'Tambah Barang Baru'}</DialogTitle>
+                        <DialogTitle className="text-2xl font-bold text-foreground">
+                            {product ? 'Edit Barang' : 'Tambah Barang Baru'}
+                        </DialogTitle>
                         <DialogDescription className="text-muted-foreground">
-                            Is i form berikut untuk {product ? 'mengubah data' : 'menambahkan'} barang ke inventory.
+                            Isi form berikut untuk {product ? 'mengubah data' : 'menambahkan'} barang ke inventory.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -180,7 +182,7 @@ export function ProductForm({ product, open: controlledOpen, onOpenChange: contr
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="jumlah" className="text-foreground font-semibold">Stok Awal</Label>
+                            <Label htmlFor="jumlah" className="text-foreground font-semibold">Stok Saat Ini</Label>
                             <Input
                                 id="jumlah"
                                 name="jumlah"
