@@ -31,7 +31,7 @@ export default async function DashboardPage() {
             {/* Banner Section */}
             <div className="w-full relative rounded-[2rem] overflow-hidden shadow-sm border border-border group h-[180px] md:h-[280px]">
                 <Image
-                    src="/images/dashboard aplikasi forbis umkm cimanggung (1350 x 1080 px) (1500 x 1000 px).png"
+                    src="/images/baner well.png"
                     alt="Dashboard Aplikasi Penjualan Forbis UMKM Cimanggung"
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
