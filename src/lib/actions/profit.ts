@@ -41,7 +41,7 @@ export async function calculateProfit(startDate: string, endDate: string, catego
 
     let query = supabase
         .from('barang_laku')
-        .select('laba')
+        .select('laba, is_deleted')
         .gte('tanggal', startDate)
         .lte('tanggal', endDate);
 
