@@ -101,28 +101,32 @@ async function exportExcelForKategori(data: Sale[], kategori: string, date: stri
 
 async function exportPDFForKategori(data: Sale[], kategori: string, date: string, variant: 'orange' | 'blue') {
     const doc = new jsPDF();
-    const printDate = new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-    const printNumber = `INV-${Date.now().toString().slice(-6)}`;
     const logoBase64 = await getLogoBase64();
 
     const startY = applyPDFHeader(doc, `INVOICE`, logoBase64);
-    const totalSum = data.reduce((acc, sale) => acc + sale.total_harga, 0)
+    const invoiceNo = `INV-${Date.now().toString().slice(-6)}`;
+    const totalSum = data.reduce((acc, sale) => acc + sale.total_harga, 0);
+    const totalQtySum = data.reduce((acc, sale) => acc + sale.jumlah, 0);
 
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-    doc.text(`No. Cetak: ${printNumber}`, 15, startY);
-    doc.text(`Tanggal Laporan: ${printDate}`, 15, startY + 5);
+    doc.text(`No. Invoice: ${invoiceNo}`, 14, startY);
+    doc.text(`Tanggal Cetak: ${format(new Date(date + 'T00:00:00'), 'dd MMMM yyyy', { locale: id })}`, 14, startY + 5);
 
     autoTable(doc, {
         startY: startY + 10,
-        head: [['No', 'Waktu', 'Nama Pelanggan', 'Total Belanja']],
-        body: data.map((s, i) => [
-            i + 1,
-            format(new Date(s.created_at), 'HH:mm'),
-            s.nama,
-            new Intl.NumberFormat('id-ID').format(s.total_harga)
+        head: [['No', 'Tanggal', 'Nama Barang', 'Qty', 'Harga', 'Total']],
+        body: data.map((sale, index) => [
+            index + 1,
+            sale.tanggal,
+            sale.nama,
+            sale.jumlah,
+            (sale.total_harga / sale.jumlah).toLocaleString('id-ID'),
+            sale.total_harga.toLocaleString('id-ID')
         ]),
         foot: [[
             { content: 'TOTAL', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240], textColor: [0, 0, 0] } },
+            { content: totalQtySum.toString(), styles: { halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240], textColor: [0, 0, 0] } },
+            { content: '', styles: { fillColor: [240, 240, 240] } },
             { content: `Rp ${totalSum.toLocaleString('id-ID')}`, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240], textColor: [0, 0, 0] } }
         ]],
         theme: 'grid',
@@ -132,12 +136,12 @@ async function exportPDFForKategori(data: Sale[], kategori: string, date: string
         styles: { fontSize: 8, lineColor: [200, 200, 200], lineWidth: 0.1 }
     });
 
-    const finalY = (doc as any).lastAutoTable.finalY || startY + 50
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    doc.text('Terima Kasih Atas Kunjungan Anda', 105, finalY + 15, { align: 'center' })
+    const finalY = (doc as any).lastAutoTable.finalY || startY + 50;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Terima Kasih Atas Kunjungan Anda', 105, finalY + 15, { align: 'center' });
 
-    doc.save(`Laporan_Penjualan_${kategori}_${date}.pdf`);
+    doc.save(`Invoice_${kategori}_${date}.pdf`);
 }
 
 export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
