@@ -14,12 +14,15 @@ import { cn } from '@/lib/utils';
 export default function SettingsPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [userEmail, setUserEmail] = useState('');
+    const [userPassword, setUserPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState({
         new: false,
         confirm: false,
-        admin: false
+        admin: false,
+        user: false
     });
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -83,6 +86,27 @@ export default function SettingsPage() {
             setMessage({ type: 'success', text: `Berhasil mendaftarkan admin ${email}. Silakan cek email untuk verifikasi jika diaktifkan di Supabase.` });
             setEmail('');
             setPassword('');
+        } catch (err: any) {
+            setMessage({ type: 'error', text: err.message });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCreateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setMessage(null);
+        try {
+            const { error } = await supabase.auth.signUp({
+                email: userEmail,
+                password: userPassword,
+                options: { data: { role: 'user' } }
+            });
+            if (error) throw error;
+            setMessage({ type: 'success', text: `Berhasil mendaftarkan user ${userEmail}. Silakan cek email untuk verifikasi jika diaktifkan di Supabase.` });
+            setUserEmail('');
+            setUserPassword('');
         } catch (err: any) {
             setMessage({ type: 'error', text: err.message });
         } finally {
@@ -273,6 +297,66 @@ export default function SettingsPage() {
                             </div>
                         </div>
                     </CardFooter>
+                </Card>
+            </div>
+
+            {/* User Management (Create New User) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <Card className="md:col-span-2 shadow-sm border-gray-100 rounded-[2rem] border-l-4 border-l-cyan-400">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <UserPlus className="h-5 w-5 text-cyan-500" />
+                            Tambah User Baru
+                        </CardTitle>
+                        <CardDescription>Daftarkan akun user untuk akses portal pembagian laba</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleCreateUser} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="user-email">Email User Baru</Label>
+                                <div className="relative">
+                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                    <Input
+                                        id="user-email"
+                                        type="email"
+                                        className="pl-9"
+                                        value={userEmail}
+                                        onChange={(e) => setUserEmail(e.target.value)}
+                                        placeholder="user@koperasi.id"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="user-password-init">Password Awal</Label>
+                                <div className="relative">
+                                    <Key className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                    <Input
+                                        id="user-password-init"
+                                        type={showPassword.user ? "text" : "password"}
+                                        className="pl-9 pr-10"
+                                        value={userPassword}
+                                        onChange={(e) => setUserPassword(e.target.value)}
+                                        placeholder="••••••••"
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword({ ...showPassword, user: !showPassword.user })}
+                                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                                    >
+                                        {showPassword.user ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex items-end">
+                                <Button type="submit" className="w-full bg-cyan-500 hover:bg-cyan-600 text-white" disabled={loading}>
+                                    {loading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
+                                    Tambah User
+                                </Button>
+                            </div>
+                        </form>
+                    </CardContent>
                 </Card>
             </div>
         </div>

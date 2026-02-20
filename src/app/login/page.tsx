@@ -6,15 +6,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Lock, Mail, Users, ShoppingCart, TrendingUp, PieChart, Package, Calendar } from 'lucide-react';
+import { Loader2, Lock, Mail, Users, ShoppingCart, TrendingUp, PieChart, Package, Calendar, ShieldCheck, User } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
+
+type LoginRole = 'admin' | 'user';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [loginRole, setLoginRole] = useState<LoginRole>('admin');
     const router = useRouter();
     const supabase = createClient();
 
@@ -24,13 +28,29 @@ export default function LoginPage() {
         setError(null);
 
         try {
-            const { error } = await supabase.auth.signInWithPassword({
+            const { data, error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
             });
 
             if (error) throw error;
-            router.push('/dashboard');
+
+            // Role-based redirect
+            const role = data.user?.user_metadata?.role;
+            if (loginRole === 'user') {
+                if (role !== 'user') {
+                    await supabase.auth.signOut();
+                    throw new Error('Akun ini bukan akun User. Gunakan login Admin.');
+                }
+                router.push('/user');
+            } else {
+                // admin: allow if role is 'admin' or not set (legacy)
+                if (role === 'user') {
+                    await supabase.auth.signOut();
+                    throw new Error('Akun ini bukan akun Admin. Gunakan login User.');
+                }
+                router.push('/dashboard');
+            }
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -83,14 +103,47 @@ export default function LoginPage() {
                 <Card className="glass border-white/20 shadow-2xl">
                     <CardHeader className="text-center space-y-2">
                         <div className="mx-auto bg-white/20 w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-inner">
-                            <Users className="text-primary w-8 h-8" />
+                            {loginRole === 'admin'
+                                ? <ShieldCheck className="text-primary w-8 h-8" />
+                                : <User className="text-primary w-8 h-8" />
+                            }
                         </div>
                         <CardTitle className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">
                             Koperasi UMKM
                         </CardTitle>
                         <CardDescription className="text-gray-500">
-                            Masuk untuk mengelola inventory dan penjualan
+                            Masuk untuk mengakses sistem
                         </CardDescription>
+
+                        {/* Role Toggle */}
+                        <div className="flex rounded-2xl overflow-hidden border border-gray-200 bg-gray-100 p-1 mt-2">
+                            <button
+                                type="button"
+                                onClick={() => { setLoginRole('admin'); setError(null); }}
+                                className={cn(
+                                    "flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-sm font-semibold transition-all duration-200",
+                                    loginRole === 'admin'
+                                        ? "bg-white text-primary shadow-sm"
+                                        : "text-gray-500 hover:text-gray-700"
+                                )}
+                            >
+                                <ShieldCheck className="h-4 w-4" />
+                                Admin
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => { setLoginRole('user'); setError(null); }}
+                                className={cn(
+                                    "flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-sm font-semibold transition-all duration-200",
+                                    loginRole === 'user'
+                                        ? "bg-white text-primary shadow-sm"
+                                        : "text-gray-500 hover:text-gray-700"
+                                )}
+                            >
+                                <User className="h-4 w-4" />
+                                User
+                            </button>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleLogin} className="space-y-4">
@@ -101,7 +154,7 @@ export default function LoginPage() {
                                     <Input
                                         id="email"
                                         type="email"
-                                        placeholder="admin@koperasi.id"
+                                        placeholder={loginRole === 'admin' ? "admin@koperasi.id" : "user@koperasi.id"}
                                         className="pl-9"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
@@ -125,7 +178,7 @@ export default function LoginPage() {
                                 </div>
                             </div>
 
-                            {/* Remember Me Checkbox (HTML standard for simplicity) */}
+                            {/* Remember Me Checkbox */}
                             <div className="flex items-center space-x-2">
                                 <input
                                     type="checkbox"
@@ -148,7 +201,8 @@ export default function LoginPage() {
                                 className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-blue-600 hover:to-primary transition-all duration-300 shadow-lg"
                                 disabled={loading}
                             >
-                                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Masuk'}
+                                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                {loading ? 'Memproses...' : `Masuk sebagai ${loginRole === 'admin' ? 'Admin' : 'User'}`}
                             </Button>
                         </form>
                     </CardContent>
