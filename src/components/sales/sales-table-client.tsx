@@ -42,7 +42,7 @@ export function SalesTableClient({ data, title, variant, kategori }: SalesTableC
 
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                     <BulkDownloadInvoiceButton
-                        data={data}
+                        sales={data}
                         kategori={kategori}
                         variant={variant}
                     />
