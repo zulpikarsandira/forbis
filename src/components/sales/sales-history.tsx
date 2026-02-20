@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { deleteHistorySale, restoreHistorySale } from '@/lib/actions/sales';
+import { deleteHistorySale, restoreHistorySale, getSalesByDate, type Sale } from '@/lib/actions/sales';
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -34,22 +34,15 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Loader2 } from 'lucide-react';
 
 // Types
-interface Sale {
-    id: number;
-    tanggal: string;
-    nama: string;
-    total_harga: number;
-    jumlah: number;
-    laba: number;
-    kategori: 'Dapur' | 'Warung';
-    created_at: string;
+export type ExtendedSale = Sale & {
     is_deleted?: boolean;
-}
+};
 
 interface SalesHistoryProps {
-    sales: Sale[];
+    sales?: ExtendedSale[];
 }
 
 async function exportExcelForKategori(data: Sale[], kategori: string, date: string, variant: 'orange' | 'blue') {
@@ -138,22 +131,43 @@ async function exportPDFForKategori(data: Sale[], kategori: string, date: string
     doc.save(`Laporan_Penjualan_${kategori}_${date}.pdf`);
 }
 
-export function SalesHistory({ sales }: SalesHistoryProps) {
+export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
     const [date, setDate] = useState<Date>(new Date());
+    const [fetchedSales, setFetchedSales] = useState<ExtendedSale[]>([]);
+    const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterKategori, setFilterKategori] = useState<'Semua' | 'Dapur' | 'Warung'>('Semua');
     const [showTrash, setShowTrash] = useState(false);
     const [loadingAction, setLoadingAction] = useState<number | null>(null);
+
+    // Fetch data if initialSales not provided
+    useEffect(() => {
+        if (!initialSales) {
+            const loadData = async () => {
+                setLoading(true);
+                const formattedDate = format(date, 'yyyy-MM-dd');
+                const result = await getSalesByDate(formattedDate);
+                setFetchedSales(result.data || []);
+                setLoading(false);
+            };
+            loadData();
+        }
+    }, [date, initialSales]);
+
+    const activeSales = initialSales || fetchedSales;
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
     const filteredSales = useMemo(() => {
-        return sales.filter(sale => {
-            const saleDate = new Date(sale.created_at).toDateString();
+        return activeSales.filter(sale => {
+            // If we fetched by date, we don't strictly need to check date here, 
+            // but if initialSales is provided (from parent), we do.
+            const saleDate = new Date(sale.tanggal).toDateString();
             const selectedDate = date.toDateString();
             const matchesDate = saleDate === selectedDate;
+
             const matchesSearch = sale.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 String(sale.id).toLowerCase().includes(searchTerm.toLowerCase());
             const matchesKategori = filterKategori === 'Semua' || sale.kategori === filterKategori;
@@ -161,7 +175,7 @@ export function SalesHistory({ sales }: SalesHistoryProps) {
 
             return matchesDate && matchesSearch && matchesKategori && matchesTrash;
         });
-    }, [sales, date, searchTerm, filterKategori, showTrash]);
+    }, [activeSales, date, searchTerm, filterKategori, showTrash]);
 
     const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
     const currentSales = filteredSales.slice(
@@ -310,7 +324,16 @@ export function SalesHistory({ sales }: SalesHistoryProps) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {currentSales.length > 0 ? (
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="h-32 text-center">
+                                        <div className="flex flex-col items-center justify-center gap-2">
+                                            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                                            <p className="text-sm text-muted-foreground">Memuat data...</p>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ) : currentSales.length > 0 ? (
                                 currentSales.map((sale, index) => (
                                     <TableRow key={sale.id} className="hover:bg-muted/30 border-muted/50">
                                         <TableCell className="text-center font-medium text-muted-foreground">
