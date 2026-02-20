@@ -107,8 +107,8 @@ export default function SalesPage() {
                             Menampilkan data hari ini: <strong className="text-foreground">{today}</strong>
                         </p>
                     )}
-                    <SalesTableClient data={salesDapur} title="Penjualan Dapur" variant="orange" kategori="Dapur" />
-                    <SalesTableClient data={salesWarung} title="Penjualan Warung atau Umum" variant="blue" kategori="Warung" />
+                    <SalesTableClient data={salesDapur} title="Penjualan Dapur" variant="orange" kategori="Dapur" loading={loading} />
+                    <SalesTableClient data={salesWarung} title="Penjualan Warung atau Umum" variant="blue" kategori="Warung" loading={loading} />
                 </TabsContent>
 
                 {/* History Tab */}

@@ -1,11 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Plus, ReceiptText, Trash2, Loader2, CheckCircle2 } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { SalesForm } from "@/components/sales/sales-form"
-import { PrintInvoiceButton } from "@/components/sales/print-invoice-button"
 import {
     Dialog,
     DialogContent,
@@ -18,23 +17,26 @@ import { DownloadInvoiceButton } from './download-invoice-button';
 import { BulkDownloadInvoiceButton } from './bulk-download-button';
 import { deleteSale, type Sale } from '@/lib/actions/sales';
 import { cn } from "@/lib/utils"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface SalesTableClientProps {
     data: Sale[];
     title: string;
     variant: 'orange' | 'blue';
     kategori: 'Dapur' | 'Warung';
+    loading?: boolean;
 }
 
-export function SalesTableClient({ data: initialData, title, variant, kategori }: SalesTableClientProps) {
+export function SalesTableClient({ data, title, variant, kategori, loading = false }: SalesTableClientProps) {
     const [open, setOpen] = useState(false);
-    const [sales, setSales] = useState<Sale[]>(initialData);
+    const [sales, setSales] = useState<Sale[]>(data);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-    // Keep in sync when parent data changes (e.g. Supabase realtime push)
-    // We only sync if the incoming data is different to avoid wiping local deletes
-    const prevDataRef = useState<Sale[]>(initialData);
+    // ✅ KEY FIX: sync local state whenever parent re-fetches via Supabase realtime
+    useEffect(() => {
+        setSales(data);
+    }, [data]);
 
     const showSuccess = (msg: string) => {
         setSuccessMessage(msg);
@@ -53,7 +55,7 @@ export function SalesTableClient({ data: initialData, title, variant, kategori }
             return;
         }
 
-        // Remove from local state immediately — no page refresh needed
+        // Remove instantly from local state
         setSales(prev => prev.filter(s => s.id !== id));
         showSuccess(`Transaksi "${nama}" berhasil dihapus.`);
     };
@@ -135,7 +137,20 @@ export function SalesTableClient({ data: initialData, title, variant, kategori }
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {sales.length > 0 ? (
+                            {loading ? (
+                                // Loading skeleton rows
+                                Array.from({ length: 4 }).map((_, i) => (
+                                    <TableRow key={`skeleton-${i}`}>
+                                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                        <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                                        <TableCell className="flex justify-center"><Skeleton className="h-5 w-8" /></TableCell>
+                                        <TableCell className="text-right"><Skeleton className="h-4 w-28 ml-auto" /></TableCell>
+                                        <TableCell className="text-right"><Skeleton className="h-4 w-24 ml-auto" /></TableCell>
+                                        <TableCell className="text-center"><Skeleton className="h-7 w-8 mx-auto" /></TableCell>
+                                        <TableCell className="text-center"><Skeleton className="h-7 w-8 mx-auto" /></TableCell>
+                                    </TableRow>
+                                ))
+                            ) : sales.length > 0 ? (
                                 sales.map((sale) => (
                                     <TableRow key={sale.id} className="group hover:bg-muted/50 transition-colors">
                                         <TableCell className="text-muted-foreground whitespace-nowrap">{sale.tanggal}</TableCell>
