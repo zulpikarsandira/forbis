@@ -56,7 +56,9 @@ export async function calculateProfit(startDate: string, endDate: string, catego
         return { error: error.message };
     }
 
-    const totalLaba = data.reduce((sum, item) => sum + item.laba, 0);
+    // Exclude soft-deleted rows (is_deleted may be undefined for old rows = treat as false)
+    const active = (data as any[]).filter(d => !d.is_deleted);
+    const totalLaba = active.reduce((sum, item) => sum + item.laba, 0);
     return { totalLaba };
 }
 
@@ -216,8 +218,11 @@ export async function getDetailedProfitData(startDate: string, endDate: string, 
 
     if (salesError) return { error: salesError.message };
 
+    // Exclude soft-deleted rows in app code
+    const activeSales = (sales as any[]).filter(s => !s.is_deleted);
+
     // 2. Fetch Products
-    const productNames = [...new Set(sales.map((s: any) => s.nama))];
+    const productNames = [...new Set(activeSales.map((s: any) => s.nama))];
     const { data: products } = await supabase
         .from('barang')
         .select('nama, suplier')
@@ -226,7 +231,7 @@ export async function getDetailedProfitData(startDate: string, endDate: string, 
     // Create map for quick lookup
     const productMap = new Map(products?.map((p: any) => [p.nama, p]) || []);
 
-    const detailedData: DetailedProfitItem[] = sales.map((sale: any) => {
+    const detailedData: DetailedProfitItem[] = activeSales.map((sale: any) => {
         const product = productMap.get(sale.nama);
 
         // Basic calculations

@@ -26,8 +26,10 @@ import { ChevronDown, FileText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ProfitPage() {
-    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0].slice(0, 7) + '-01'); // First day of current month
-    const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+    const jakartaDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
+    const jakartaYesterday = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date(Date.now() - 86400000));
+    const [startDate, setStartDate] = useState(jakartaDate.slice(0, 7) + '-01'); // First day of current month (WIB)
+    const [endDate, setEndDate] = useState(jakartaYesterday); // Yesterday - today's data is still in Entry Hari Ini
     const [totalLaba, setTotalLaba] = useState<number | null>(null);
     const [allocationData, setAllocationData] = useState<ProfitAllocation[]>([]);
     const [loading, setLoading] = useState(false);
@@ -35,7 +37,7 @@ export default function ProfitPage() {
 
     // View state
     const [viewMode, setViewMode] = useState<'calculator' | 'report'>('calculator');
-    const [periodeName, setPeriodeName] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+    const [periodeName, setPeriodeName] = useState(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date()).slice(0, 7)); // YYYY-MM (WIB)
     const [activeTab, setActiveTab] = useState<'Warung' | 'Dapur'>('Warung');
 
     // Reset state when tab changes
