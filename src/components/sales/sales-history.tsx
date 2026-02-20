@@ -4,7 +4,17 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { getSalesByDate, getHistoryDates, deleteHistorySale, restoreHistorySale, type Sale } from '@/lib/actions/sales';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { FileDown, History, ChevronDown, ReceiptText, Loader2, FileSpreadsheet, FileText, Trash2, RotateCcw, ChevronUp } from 'lucide-react';
+import { FileDown, History, ChevronDown, ReceiptText, Loader2, FileSpreadsheet, FileText, Trash2, RotateCcw, ChevronUp, XCircle } from 'lucide-react';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
@@ -133,11 +143,14 @@ function HistoryKategoriTable({ data: initialData, kategori, date, variant }: {
     const [deletedItems, setDeletedItems] = useState<Sale[]>([]);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [restoringId, setRestoringId] = useState<number | null>(null);
+    const [permDeletingId, setPermDeletingId] = useState<number | null>(null);
+    const [confirmPermDelete, setConfirmPermDelete] = useState<Sale | null>(null);
     const [showTrash, setShowTrash] = useState(false);
 
     // Sync if parent re-fetches
     useEffect(() => { setData(initialData); setDeletedItems([]); }, [initialData]);
 
+    // Soft delete — record moves to local trash, restorable
     const handleDelete = async (sale: Sale) => {
         setDeletingId(sale.id);
         const res = await deleteHistorySale(sale.id);
@@ -147,6 +160,17 @@ function HistoryKategoriTable({ data: initialData, kategori, date, variant }: {
             setDeletedItems(prev => [sale, ...prev]);
         }
         setDeletingId(null);
+    };
+
+    // Permanent delete — no restore possible
+    const handlePermDelete = async () => {
+        if (!confirmPermDelete) return;
+        setPermDeletingId(confirmPermDelete.id);
+        setConfirmPermDelete(null);
+        const res = await deleteHistorySale(confirmPermDelete.id);
+        if (res.error) { alert('Gagal hapus permanen: ' + res.error); }
+        else { setData(prev => prev.filter(s => s.id !== confirmPermDelete.id)); }
+        setPermDeletingId(null);
     };
 
     const handleRestore = async (sale: Sale) => {
@@ -201,7 +225,7 @@ function HistoryKategoriTable({ data: initialData, kategori, date, variant }: {
             {/* Active table */}
             <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                    <Table className="min-w-[500px]">
+                    <Table className="min-w-[520px]">
                         <TableHeader className="bg-gray-100/50">
                             <TableRow>
                                 <TableHead className="w-10">No</TableHead>
@@ -209,12 +233,12 @@ function HistoryKategoriTable({ data: initialData, kategori, date, variant }: {
                                 <TableHead>Nama Barang</TableHead>
                                 <TableHead className="text-center">Qty</TableHead>
                                 <TableHead className="text-right">Total Harga</TableHead>
-                                <TableHead className="w-12 text-center">Aksi</TableHead>
+                                <TableHead className="w-20 text-center">Aksi</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {data.length > 0 ? data.map((sale, i) => (
-                                <TableRow key={sale.id} className="hover:bg-gray-50/50 group">
+                                <TableRow key={sale.id} className="hover:bg-gray-50/50">
                                     <TableCell className="text-center text-gray-400 text-sm">{i + 1}</TableCell>
                                     <TableCell className="text-gray-500 whitespace-nowrap">{sale.tanggal}</TableCell>
                                     <TableCell className="font-semibold">{sale.nama}</TableCell>
@@ -223,16 +247,30 @@ function HistoryKategoriTable({ data: initialData, kategori, date, variant }: {
                                     </TableCell>
                                     <TableCell className="text-right font-mono font-bold">{formatRupiah(sale.total_harga)}</TableCell>
                                     <TableCell className="text-center">
-                                        <button
-                                            onClick={() => handleDelete(sale)}
-                                            disabled={deletingId === sale.id}
-                                            className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
-                                            title="Hapus transaksi ini"
-                                        >
-                                            {deletingId === sale.id
-                                                ? <Loader2 className="h-4 w-4 animate-spin" />
-                                                : <Trash2 className="h-4 w-4" />}
-                                        </button>
+                                        <div className="flex items-center justify-center gap-1">
+                                            {/* Soft delete — moves to trash, restorable */}
+                                            <button
+                                                onClick={() => handleDelete(sale)}
+                                                disabled={deletingId === sale.id || permDeletingId === sale.id}
+                                                className="p-1.5 rounded-lg text-amber-500 hover:text-amber-700 hover:bg-amber-50 transition-colors disabled:opacity-40"
+                                                title="Hapus (bisa di-restore)"
+                                            >
+                                                {deletingId === sale.id
+                                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                                    : <Trash2 className="h-4 w-4" />}
+                                            </button>
+                                            {/* Permanent delete — no restore */}
+                                            <button
+                                                onClick={() => setConfirmPermDelete(sale)}
+                                                disabled={deletingId === sale.id || permDeletingId === sale.id}
+                                                className="p-1.5 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors disabled:opacity-40"
+                                                title="Hapus permanen (tidak bisa di-restore)"
+                                            >
+                                                {permDeletingId === sale.id
+                                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                                    : <XCircle className="h-4 w-4" />}
+                                            </button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             )) : (
@@ -302,6 +340,24 @@ function HistoryKategoriTable({ data: initialData, kategori, date, variant }: {
                     )}
                 </div>
             )}
+
+            {/* Permanent delete confirmation dialog */}
+            <AlertDialog open={!!confirmPermDelete} onOpenChange={(open) => { if (!open) setConfirmPermDelete(null); }}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>🗑️ Hapus Permanen?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Data <strong>"{confirmPermDelete?.nama}"</strong> ({confirmPermDelete?.tanggal}) akan dihapus secara <strong>permanen</strong> dan <strong>tidak bisa dipulihkan</strong> kembali. Lanjutkan?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction onClick={handlePermDelete} className="bg-red-600 hover:bg-red-700">
+                            Ya, Hapus Permanen
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
