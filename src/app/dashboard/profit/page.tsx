@@ -503,9 +503,6 @@ export default function ProfitPage() {
                                         {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Calculator className="mr-2 h-4 w-4" />}
                                         Hitung Laba
                                     </Button>
-                                    <Button onClick={fetchAllocation} disabled={loading} className="w-full" variant="secondary">
-                                        Cek Data
-                                    </Button>
                                 </div>
                             </CardContent>
                         </Card>
