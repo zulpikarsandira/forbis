@@ -155,10 +155,13 @@ export async function createSale(formData: FormData) {
     // so we do best effort sequence: Update Stock -> Insert Sale. 
     // Ideally we assume success or handle manual rollback if insert fails).
 
-    // Decrease Stock
+    // Decrease Stock and Update Modal (Purchase Price)
     const { error: updateError } = await supabase
         .from('barang')
-        .update({ jumlah: product.jumlah - jumlah })
+        .update({
+            jumlah: product.jumlah - jumlah,
+            modal: modal
+        })
         .eq('nama', nama);
 
     if (updateError) {
