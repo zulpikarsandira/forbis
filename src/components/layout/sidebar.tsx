@@ -16,7 +16,8 @@ import {
     DatabaseBackup
 } from 'lucide-react';
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client'; // Import client
+import { createClient } from '@/lib/supabase/client';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export function Sidebar() {
     const pathname = usePathname();
@@ -31,7 +32,7 @@ export function Sidebar() {
     ];
 
     return (
-        <aside className="bg-white hidden lg:flex flex-col w-64 h-screen sticky top-0 border-r border-gray-100 shadow-sm z-20">
+        <aside className="bg-sidebar hidden lg:flex flex-col w-64 h-screen sticky top-0 border-r border-sidebar-border shadow-sm z-20">
             {/* Logo */}
             <div className="h-20 flex items-center px-8">
                 <img
@@ -40,8 +41,8 @@ export function Sidebar() {
                     className="h-12 w-auto object-contain"
                 />
                 <div className="ml-3 flex flex-col">
-                    <span className="font-bold text-lg text-gray-800 tracking-tight leading-none">Forbis</span>
-                    <span className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">Cimanggung</span>
+                    <span className="font-bold text-lg text-sidebar-foreground tracking-tight leading-none">Forbis</span>
+                    <span className="text-[10px] text-sidebar-foreground/50 font-medium tracking-wider uppercase">Cimanggung</span>
                 </div>
             </div>
 
@@ -58,11 +59,11 @@ export function Sidebar() {
                                 className={cn(
                                     "flex items-center px-4 py-3 rounded-2xl transition-all duration-200 group text-sm font-medium",
                                     isActive
-                                        ? "text-primary bg-indigo-50"
-                                        : "text-gray-500 hover:text-primary hover:bg-gray-50"
+                                        ? "text-sidebar-primary-foreground bg-sidebar-primary"
+                                        : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                                 )}
                             >
-                                <Icon className={cn("h-[18px] w-[18px] mr-3 transition-colors", isActive ? "text-primary" : "text-gray-400 group-hover:text-primary")} />
+                                <Icon className={cn("h-[18px] w-[18px] mr-3 transition-colors", isActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/50 group-hover:text-sidebar-primary-foreground")} />
                                 {label}
                             </div>
                         </Link>
@@ -70,11 +71,14 @@ export function Sidebar() {
                 })}
             </nav>
 
-            {/* Logout Button */}
-            <div className="p-4 border-t border-gray-100">
+            {/* Theme Toggle & Logout Button */}
+            <div className="p-4 space-y-4 border-t border-sidebar-border">
+                <div className="px-4">
+                    <ThemeToggle />
+                </div>
                 <Button
                     variant="ghost"
-                    className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl"
+                    className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-2xl"
                     onClick={async () => {
                         const supabase = createClient();
                         await supabase.auth.signOut();
