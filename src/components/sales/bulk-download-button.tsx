@@ -110,9 +110,11 @@ export function BulkDownloadInvoiceButton({
             const logoBase64 = await getLogoBase64()
 
             const startY = applyPDFHeader(doc, `INVOICE`, logoBase64)
+            const invoiceNo = `INV-${Date.now().toString().slice(-6)}`
+            const totalSum = sales.reduce((acc, sale) => acc + sale.total_harga, 0)
 
             doc.setFontSize(10)
-            doc.text(`Kategori: ${kategori}`, 14, startY)
+            doc.text(`No. Invoice: ${invoiceNo}`, 14, startY)
             doc.text(`Tanggal Cetak: ${format(new Date(), 'dd MMMM yyyy', { locale: id })}`, 14, startY + 5)
 
             autoTable(doc, {
@@ -126,6 +128,10 @@ export function BulkDownloadInvoiceButton({
                     (sale.total_harga / sale.jumlah).toLocaleString('id-ID'),
                     sale.total_harga.toLocaleString('id-ID')
                 ]),
+                foot: [[
+                    { content: 'TOTAL KESELURUHAN', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240] } },
+                    { content: `Rp ${totalSum.toLocaleString('id-ID')}`, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240] } }
+                ]],
                 theme: 'grid',
                 headStyles: {
                     fillColor: variant === 'orange' ? [249, 115, 22] : [37, 99, 235],
@@ -133,7 +139,12 @@ export function BulkDownloadInvoiceButton({
                 styles: { fontSize: 8, lineColor: [200, 200, 200], lineWidth: 0.1 }
             })
 
-            doc.save(`Invoices_${kategori}_${format(new Date(), 'yyyy-MM-dd')}.pdf`)
+            const finalY = (doc as any).lastAutoTable.finalY || startY + 50
+            doc.setFontSize(10)
+            doc.setFont('helvetica', 'italic')
+            doc.text('Thank you for your business!', 105, finalY + 15, { align: 'center' })
+
+            doc.save(`Invoice_${kategori}_${format(new Date(), 'yyyy-MM-dd')}.pdf`)
         } catch (error) {
             console.error('PDF Export Error:', error)
         } finally {

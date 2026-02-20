@@ -106,14 +106,14 @@ async function exportPDFForKategori(data: Sale[], kategori: string, date: string
     const logoBase64 = await getLogoBase64();
 
     const startY = applyPDFHeader(doc, `Laporan Penjualan`, logoBase64);
+    const totalSum = data.reduce((acc, sale) => acc + sale.total_harga, 0)
 
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     doc.text(`No. Cetak: ${printNumber}`, 15, startY);
-    doc.text(`Kategori: ${kategori}`, 15, startY + 5);
-    doc.text(`Tanggal Laporan: ${printDate}`, 15, startY + 10);
+    doc.text(`Tanggal Laporan: ${printDate}`, 15, startY + 5);
 
     autoTable(doc, {
-        startY: startY + 15,
+        startY: startY + 10,
         head: [['No', 'Waktu', 'Nama Pelanggan', 'Total Belanja']],
         body: data.map((s, i) => [
             i + 1,
@@ -121,12 +121,21 @@ async function exportPDFForKategori(data: Sale[], kategori: string, date: string
             s.nama,
             new Intl.NumberFormat('id-ID').format(s.total_harga)
         ]),
+        foot: [[
+            { content: 'TOTAL KESELURUHAN', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240] } },
+            { content: `Rp ${totalSum.toLocaleString('id-ID')}`, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240] } }
+        ]],
         theme: 'grid',
         headStyles: {
             fillColor: variant === 'orange' ? [249, 115, 22] : [37, 99, 235],
         },
         styles: { fontSize: 8, lineColor: [200, 200, 200], lineWidth: 0.1 }
     });
+
+    const finalY = (doc as any).lastAutoTable.finalY || startY + 50
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'italic')
+    doc.text('Thank you for your business!', 105, finalY + 15, { align: 'center' })
 
     doc.save(`Laporan_Penjualan_${kategori}_${date}.pdf`);
 }
