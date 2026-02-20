@@ -36,6 +36,7 @@ export type Sale = {
     laba: number;
     kategori: 'Dapur' | 'Warung';
     created_at: string;
+    is_deleted?: boolean;
 };
 
 export async function getSales(dateFrom?: string, dateTo?: string) {
@@ -79,6 +80,7 @@ export async function getTodaySales() {
         .from('barang_laku')
         .select('*')
         .eq('tanggal', today)
+        .eq('is_deleted', false)
         .order('id', { ascending: false });
 
     if (error) return { data: [], error: error.message };
@@ -216,22 +218,30 @@ export async function deleteSale(id: number, nama: string, jumlah: number) {
     return { success: true };
 }
 
-// Delete a history record WITHOUT touching stock (for history management)
-export async function deleteHistorySale(id: number) {
+// soft delete a history record
+export async function softDeleteHistorySale(id: number) {
     const supabase = await createSupabaseServerClient();
-    const { error } = await supabase.from('barang_laku').delete().eq('id', id);
+    const { error } = await supabase.from('barang_laku').update({ is_deleted: true }).eq('id', id);
     if (error) return { error: error.message };
+    revalidatePath('/dashboard/sales');
     return { success: true };
 }
 
-// Restore a previously deleted history record (upsert only, no stock change)
-export async function restoreHistorySale(sale: Omit<Sale, never>) {
+// Restore a previously deleted history record
+export async function restoreHistorySale(id: number) {
     const supabase = await createSupabaseServerClient();
-    const { error } = await supabase.from('barang_laku').upsert(
-        { id: sale.id, tanggal: sale.tanggal, nama: sale.nama, jumlah: sale.jumlah, total_harga: sale.total_harga, laba: sale.laba, kategori: sale.kategori },
-        { onConflict: 'id' }
-    );
+    const { error } = await supabase.from('barang_laku').update({ is_deleted: false }).eq('id', id);
     if (error) return { error: error.message };
+    revalidatePath('/dashboard/sales');
+    return { success: true };
+}
+
+// Hard delete a history record
+export async function hardDeleteHistorySale(id: number) {
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.from('barang_laku').delete().eq('id', id);
+    if (error) return { error: error.message };
+    revalidatePath('/dashboard/sales');
     return { success: true };
 }
 

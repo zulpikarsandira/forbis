@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { deleteHistorySale, restoreHistorySale, getSalesByDate, type Sale } from '@/lib/actions/sales';
+import { softDeleteHistorySale, restoreHistorySale, hardDeleteHistorySale, getSalesByDate, type Sale } from '@/lib/actions/sales';
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -122,7 +122,7 @@ async function exportPDFForKategori(data: Sale[], kategori: string, date: string
             new Intl.NumberFormat('id-ID').format(s.total_harga)
         ]),
         foot: [[
-            { content: 'TOTAL KESELURUHAN', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240], textColor: [0, 0, 0] } },
+            { content: 'TOTAL', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240], textColor: [0, 0, 0] } },
             { content: `Rp ${totalSum.toLocaleString('id-ID')}`, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240], textColor: [0, 0, 0] } }
         ]],
         theme: 'grid',
@@ -195,20 +195,40 @@ export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
     const salesDapur = filteredSales.filter(s => s.kategori === 'Dapur');
     const salesWarung = filteredSales.filter(s => s.kategori === 'Warung');
 
-    const handleRestore = async (sale: Sale) => {
-        setLoadingAction(sale.id);
-        const res = await restoreHistorySale(sale);
-        if (res.success) alert('Berhasil dikembalikan');
-        else alert('Gagal mengembalikan: ' + res.error);
+    const handleRestore = async (id: number) => {
+        setLoadingAction(id);
+        const res = await restoreHistorySale(id);
+        if (res.success) {
+            // Update local state
+            setFetchedSales(prev => prev.map(s => s.id === id ? { ...s, is_deleted: false } : s));
+        } else {
+            alert('Gagal mengembalikan: ' + res.error);
+        }
+        setLoadingAction(null);
+    };
+
+    const handleSoftDelete = async (id: number) => {
+        if (!confirm('Pindahkan transaksi ini ke kotak sampah?')) return;
+        setLoadingAction(id);
+        const res = await softDeleteHistorySale(id);
+        if (res.success) {
+            setFetchedSales(prev => prev.map(s => s.id === id ? { ...s, is_deleted: true } : s));
+        } else {
+            alert('Gagal menghapus: ' + res.error);
+        }
         setLoadingAction(null);
     };
 
     const handleDeleteFinal = async (id: number) => {
         if (!confirm('Hapus permanen? Data tidak bisa dikembalikan lagi.')) return;
         setLoadingAction(id);
-        const res = await deleteHistorySale(id);
-        if (res.success) alert('Berhasil dihapus permanen');
-        else alert('Gagal menghapus: ' + res.error);
+        const res = await hardDeleteHistorySale(id);
+        if (res.success) {
+            setFetchedSales(prev => prev.filter(s => s.id !== id));
+            alert('Berhasil dihapus permanen');
+        } else {
+            alert('Gagal menghapus: ' + res.error);
+        }
         setLoadingAction(null);
     };
 
@@ -372,7 +392,7 @@ export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
                                                         variant="ghost"
                                                         className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
                                                         disabled={loadingAction === sale.id}
-                                                        onClick={() => handleRestore(sale)}
+                                                        onClick={() => handleRestore(sale.id)}
                                                     >
                                                         {loadingAction === sale.id ? <RefreshCcw className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
                                                     </Button>
@@ -387,8 +407,15 @@ export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
                                                     </Button>
                                                 </div>
                                             ) : (
-                                                <Button size="sm" variant="outline" className="h-8 rounded-lg" asChild>
-                                                    <a href={`/dashboard/sales/history/${sale.id}`}>Detail</a>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-8 rounded-lg text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                                                    disabled={loadingAction === sale.id}
+                                                    onClick={() => handleSoftDelete(sale.id)}
+                                                >
+                                                    {loadingAction === sale.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Trash2 className="h-4 w-4 mr-1" />}
+                                                    Hapus
                                                 </Button>
                                             )}
                                         </TableCell>

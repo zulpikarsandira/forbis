@@ -130,7 +130,7 @@ export function BulkDownloadInvoiceButton({
                     sale.total_harga.toLocaleString('id-ID')
                 ]),
                 foot: [[
-                    { content: 'TOTAL KESELURUHAN', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240], textColor: [0, 0, 0] } },
+                    { content: 'TOTAL', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240], textColor: [0, 0, 0] } },
                     { content: totalQtySum.toString(), styles: { halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240], textColor: [0, 0, 0] } },
                     { content: '', styles: { fillColor: [240, 240, 240] } },
                     { content: `Rp ${totalSum.toLocaleString('id-ID')}`, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240], textColor: [0, 0, 0] } }
