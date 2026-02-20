@@ -8,6 +8,7 @@ import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { cn } from "@/lib/utils"
 import ExcelJS from 'exceljs'
+import { applyExcelHeader, applyPDFHeader } from "@/lib/export-utils"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -40,27 +41,14 @@ export function BulkDownloadInvoiceButton({ data, kategori, variant }: BulkDownl
 
             const printNumber = `INV-${Date.now().toString().slice(-6)}`
 
-            // Header
-            doc.setFontSize(18)
-            doc.text('FORBIS CIMANGGUNG', 105, 15, { align: 'center' })
-            doc.setFontSize(10)
-            doc.text('Koperasi Karyawan & Umum', 105, 20, { align: 'center' })
-            doc.text('Jl. Raya Cimanggung No. 123', 105, 25, { align: 'center' })
-
-            doc.setLineWidth(0.5)
-            doc.line(15, 30, 195, 30)
-
-            // Title
-            doc.setFontSize(16)
-            doc.setFont("helvetica", "bold")
-            doc.text('INVOICE', 105, 42, { align: 'center' })
+            const startY = applyPDFHeader(doc, `INVOICE - ${kategori}`)
 
             doc.setFontSize(10)
             doc.setFont("helvetica", "normal")
-            doc.text(`No. Cetak: ${printNumber}`, 15, 50)
-            doc.text(`Kategori: ${kategori}`, 15, 55)
-            doc.text(`Tanggal Cetak: ${today}`, 195, 50, { align: 'right' })
-            doc.text(`Total Transaksi: ${data.length}`, 195, 55, { align: 'right' })
+            doc.text(`No. Cetak: ${printNumber}`, 15, startY)
+            doc.text(`Kategori: ${kategori}`, 15, startY + 5)
+            doc.text(`Tanggal Cetak: ${today}`, 195, startY, { align: 'right' })
+            doc.text(`Total Transaksi: ${data.length}`, 195, startY + 5, { align: 'right' })
 
             // Table
             const tableData = data.map((sale, index) => [
@@ -76,10 +64,10 @@ export function BulkDownloadInvoiceButton({ data, kategori, variant }: BulkDownl
 
             // @ts-ignore
             autoTable(doc, {
-                startY: 60,
+                startY: startY + 15,
                 head: [['No', 'Tanggal', 'Nama Barang', 'Qty', 'Harga', 'Total Harga']],
                 body: tableData,
-                theme: 'striped',
+                theme: 'grid',
                 headStyles: {
                     fillColor: variant === 'orange' ? [249, 115, 22] : [37, 99, 235],
                     textColor: [255, 255, 255],
@@ -119,18 +107,10 @@ export function BulkDownloadInvoiceButton({ data, kategori, variant }: BulkDownl
             const workbook = new ExcelJS.Workbook()
             const worksheet = workbook.addWorksheet(`Laporan ${kategori}`)
 
-            // Headers
-            worksheet.columns = [
-                { header: 'No', key: 'no', width: 5 },
-                { header: 'Tanggal', key: 'tanggal', width: 15 },
-                { header: 'Nama Barang', key: 'nama', width: 30 },
-                { header: 'Qty', key: 'jumlah', width: 10 },
-                { header: 'Harga', key: 'harga', width: 15 },
-                { header: 'Total Harga', key: 'total', width: 15 },
-            ]
+            const startRow = applyExcelHeader(worksheet, `Laporan Penjualan - ${kategori}`, 'F')
 
             // Styling Header
-            const headerRow = worksheet.getRow(1)
+            const headerRow = worksheet.getRow(startRow)
             headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
             headerRow.fill = {
                 type: 'pattern',

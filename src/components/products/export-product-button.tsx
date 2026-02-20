@@ -8,6 +8,7 @@ import ExcelJS from 'exceljs'; // Use ExcelJS for styling
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getAllProducts } from '@/lib/actions/products';
+import { applyExcelHeader, applyPDFHeader } from '@/lib/export-utils';
 import {
     Dialog,
     DialogContent,
@@ -61,7 +62,6 @@ export function ExportProductButton() {
                 const workbook = new ExcelJS.Workbook();
                 const worksheet = workbook.addWorksheet('Data Barang');
 
-                // Define Columns based on Template
                 if (template === 'lengkap') {
                     worksheet.columns = [
                         { header: 'Kode', key: 'kode', width: 12 },
@@ -82,8 +82,10 @@ export function ExportProductButton() {
                     ];
                 }
 
+                const startRow = applyExcelHeader(worksheet, 'DATA BARANG', template === 'lengkap' ? 'H' : 'D');
+
                 // Styling Header
-                const headerRow = worksheet.getRow(1);
+                const headerRow = worksheet.getRow(startRow);
                 headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
                 headerRow.fill = {
                     type: 'pattern',
@@ -136,10 +138,7 @@ export function ExportProductButton() {
                 // --- PDF IMPLEMENTATION ---
                 const doc = new jsPDF();
 
-                doc.setFontSize(18);
-                doc.text('Data Barang', 105, 15, { align: 'center' });
-                doc.setFontSize(10);
-                doc.text(`Tanggal Export: ${new Date().toLocaleDateString('id-ID')}`, 105, 20, { align: 'center' });
+                const startY = applyPDFHeader(doc, 'DATA BARANG');
 
                 const headIndices = template === 'lengkap'
                     ? [['Kode', 'Nama', 'Jenis', 'Suplier', 'Modal', 'Jual', 'Stok']]
@@ -158,10 +157,10 @@ export function ExportProductButton() {
                 autoTable(doc, {
                     head: headIndices,
                     body: bodyData,
-                    startY: 25,
+                    startY: startY,
                     theme: 'grid',
                     headStyles: { fillColor: [37, 99, 235] }, // Blue
-                    styles: { fontSize: 8 }
+                    styles: { fontSize: 8, lineColor: [200, 200, 200], lineWidth: 0.1 }
                 });
 
                 doc.save(fileName.replace('.xlsx', '.pdf'));

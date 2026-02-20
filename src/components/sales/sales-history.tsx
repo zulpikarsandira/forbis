@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { applyExcelHeader, applyPDFHeader } from '@/lib/export-utils';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -44,16 +45,9 @@ async function exportExcelForKategori(data: Sale[], kategori: string, date: stri
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet(`Laporan ${kategori}`);
 
-    worksheet.columns = [
-        { header: 'No', key: 'no', width: 5 },
-        { header: 'Tanggal', key: 'tanggal', width: 15 },
-        { header: 'Nama Barang', key: 'nama', width: 30 },
-        { header: 'Qty', key: 'jumlah', width: 10 },
-        { header: 'Harga', key: 'harga', width: 15 },
-        { header: 'Total Harga', key: 'total', width: 15 },
-    ];
+    const startRow = applyExcelHeader(worksheet, `Laporan Penjualan - ${kategori}`, 'F');
 
-    const headerRow = worksheet.getRow(1);
+    const headerRow = worksheet.getRow(startRow);
     headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     headerRow.fill = {
         type: 'pattern', pattern: 'solid',
@@ -99,30 +93,20 @@ function exportPDFForKategori(data: Sale[], kategori: string, date: string, vari
     const printDate = new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     const printNumber = `INV-${Date.now().toString().slice(-6)}`;
 
-    doc.setFontSize(18); doc.text('FORBIS CIMANGGUNG', 105, 15, { align: 'center' });
-    doc.setFontSize(10); doc.text('Koperasi Karyawan & Umum', 105, 20, { align: 'center' });
-    doc.text('Jl. Raya Cimanggung No. 123', 105, 25, { align: 'center' });
-    doc.setLineWidth(0.5); doc.line(15, 30, 195, 30);
-    doc.setFontSize(16); doc.setFont('helvetica', 'bold');
-    doc.text('INVOICE', 105, 42, { align: 'center' });
+    const startY = applyPDFHeader(doc, `Laporan Penjualan - ${kategori}`);
+
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-    doc.text(`No. Cetak: ${printNumber}`, 15, 50);
-    doc.text(`Kategori: ${kategori}`, 15, 55);
-    doc.text(`Tanggal: ${printDate}`, 195, 50, { align: 'right' });
-    doc.text(`Total Transaksi: ${data.length}`, 195, 55, { align: 'right' });
+    doc.text(`No. Cetak: ${printNumber}`, 15, startY);
+    doc.text(`Kategori: ${kategori}`, 15, startY + 5);
+    doc.text(`Tanggal: ${printDate}`, 195, startY, { align: 'right' });
+    doc.text(`Total Transaksi: ${data.length}`, 195, startY + 5, { align: 'right' });
 
     const totalHarga = data.reduce((sum, s) => sum + s.total_harga, 0);
     // @ts-ignore
     autoTable(doc, {
-        startY: 60,
-        head: [['No', 'Tanggal', 'Nama Barang', 'Qty', 'Harga', 'Total Harga']],
-        body: data.map((s, i) => [
-            i + 1, s.tanggal, s.nama, s.jumlah,
-            `Rp ${s.jumlah > 0 ? Math.round(s.total_harga / s.jumlah).toLocaleString('id-ID') : 0}`,
-            `Rp ${s.total_harga.toLocaleString('id-ID')}`
-        ]),
-        theme: 'striped',
+        theme: 'grid',
         headStyles: { fillColor: variant === 'orange' ? [249, 115, 22] : [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold' },
+        styles: { fontSize: 8, lineColor: [200, 200, 200], lineWidth: 0.1 },
         foot: [['', '', 'TOTAL', '', '', `Rp ${totalHarga.toLocaleString('id-ID')}`]],
         footStyles: { fillColor: [241, 245, 249], textColor: [0, 0, 0], fontStyle: 'bold' }
     });

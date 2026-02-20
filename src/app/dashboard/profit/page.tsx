@@ -13,6 +13,7 @@ import * as XLSX from 'xlsx'; // Leaving for fallback if needed, but primary is 
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { applyExcelHeader, applyPDFHeader } from '@/lib/export-utils';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -125,86 +126,54 @@ export default function ProfitPage() {
                 views: [{ state: 'frozen', xSplit: 0, ySplit: 2 }]
             });
 
+            // --- 0. Apply Official Header ---
+            const startRowTable = applyExcelHeader(worksheet, `Laporan Pembagian Laba ${activeTab} - ${periodeName}`, 'V');
+
             // --- 1. Define Columns & Headers ---
             // Row 1: Merged Headers
-            // A1: NO, B1: Tgl, C1: NO. FAKTUR, D1: NAMA BARANG, E1: BANYAK, F1: SATUAN, G1: HARGA SUPLIER, H1: JUMLAH, I1: HARGA KOPERASI, J1: JUMLAH, K1: PROFIT, L1: ZAKAT, M1: SISA
-            // N1-O1: SPJG, P1-T1: Rincian OPERASIONAL, U1: DLL (Wait, let's map exactly to image)
-            // Image Cols: 
-            // 1. NO
-            // 2. Tgl
-            // 3. NO. FAKTUR
-            // 4. NAMA BARANG
-            // 5. BANYAK
-            // 6. SATUAN
-            // 7. HARGA SUPLIER
-            // 8. JUMLAH (Modal)
-            // 9. HARGA KOPERASI
-            // 10. JUMLAH (Jual)
-            // 11. PROFIT
-            // 12. ZAKAT
-            // 13. SISA
-            // 14-15. SPJG (Row 2: CASHBACK DAPUR, KOP. FORBIS)
-            // 16. OPERASIONAL (Row 2: 80%) -> Wait, image shows "OPERASIONAL" above "80%" (Col 16)
-            // 17. SHU (Row 2: 20%) -> Wait, image shows "SHU" above "20%" (Col 17) -- Actually checking image again
+            // ...
+            // Setting up Header Row at startRowTable
+            worksheet.getCell(`A${startRowTable}`).value = "NO";
+            worksheet.getCell(`B${startRowTable}`).value = "Tgl";
+            worksheet.getCell(`C${startRowTable}`).value = "NO. FAKTUR";
+            worksheet.getCell(`D${startRowTable}`).value = "NAMA BARANG";
+            worksheet.getCell(`E${startRowTable}`).value = "BANYAK";
+            worksheet.getCell(`F${startRowTable}`).value = "SATUAN";
+            worksheet.getCell(`G${startRowTable}`).value = "HARGA SUPLIER";
+            worksheet.getCell(`H${startRowTable}`).value = "JUMLAH";
+            worksheet.getCell(`I${startRowTable}`).value = "HARGA KOPERASI";
+            worksheet.getCell(`J${startRowTable}`).value = "JUMLAH";
+            worksheet.getCell(`K${startRowTable}`).value = "PROFIT";
+            worksheet.getCell(`L${startRowTable}`).value = "ZAKAT";
+            worksheet.getCell(`M${startRowTable}`).value = "SISA";
 
-            // Correction based on image analysis:
-            // Col 14-15 merged title "SPJG". Subtitles: "CASHBACK DAPUR", "KOP. FORBIS".
-            // Col 16 title "OPERASIONAL". Subtitle "80%"? No, actually typically it is:
-            // Let's look closer at the image.
-            // "SPJG" spans 2 cols. Under it: "CASHBACK DAPUR", "KOP. FORBIS".
-            // Then next cols: OPERASIONAL | SHU | ... ??
-            // OR is "OPERASIONAL" the parent of the workers?
-            // YES. "Rincian OPERASIONAL" or just "OPERASIONAL" spans generally the worker columns.
-            // Let's assume the previous column mapping was acceptable to user:
-            // Cols: ... SISA | Cashback | Kop | Ops | SHU | Workers ...
-
-            // Let's refine the headers to be structurally correct.
-            // A-M: Standard.
-            // N-O: Group "SPJG" -> Cashback, Kop.
-            // P-Q: Group "ALOKASI KOP" (Implicit) -> Ops, SHU.
-            // R-V: Group "PEMBAGIAN OPERASIONAL" -> P1, P2, P3, P4, DLL.
-
-            // Setting up Header Row 1
-            worksheet.getCell('A1').value = "NO";
-            worksheet.getCell('B1').value = "Tgl";
-            worksheet.getCell('C1').value = "NO. FAKTUR";
-            worksheet.getCell('D1').value = "NAMA BARANG";
-            worksheet.getCell('E1').value = "BANYAK";
-            worksheet.getCell('F1').value = "SATUAN";
-            worksheet.getCell('G1').value = "HARGA SUPLIER";
-            worksheet.getCell('H1').value = "JUMLAH";
-            worksheet.getCell('I1').value = "HARGA KOPERASI";
-            worksheet.getCell('J1').value = "JUMLAH";
-            worksheet.getCell('K1').value = "PROFIT";
-            worksheet.getCell('L1').value = "ZAKAT";
-            worksheet.getCell('M1').value = "SISA";
-
-            worksheet.getCell('N1').value = "SPJG";
-            worksheet.mergeCells('N1:O1');
+            worksheet.getCell(`N${startRowTable}`).value = "SPJG";
+            worksheet.mergeCells(`N${startRowTable}:O${startRowTable}`);
 
             // Let's say P is Ops 80% and Q is SHU 20%
-            worksheet.getCell('P1').value = "ALOKASI KOP"; // Or just blank/merged
-            worksheet.mergeCells('P1:Q1');
+            worksheet.getCell(`P${startRowTable}`).value = "ALOKASI KOP"; // Or just blank/merged
+            worksheet.mergeCells(`P${startRowTable}:Q${startRowTable}`);
 
-            worksheet.getCell('R1').value = "RINCIAN OPERASIONAL";
-            worksheet.mergeCells('R1:V1');
+            worksheet.getCell(`R${startRowTable}`).value = "RINCIAN OPERASIONAL";
+            worksheet.mergeCells(`R${startRowTable}:V${startRowTable}`);
 
-            // Setting up Header Row 2
-            worksheet.getCell('N2').value = "CASHBACK DAPUR";
-            worksheet.getCell('O2').value = "KOP. FORBIS";
+            // Setting up Header Row 2 (next row)
+            const secondHeaderRow = startRowTable + 1;
+            worksheet.getCell(`N${secondHeaderRow}`).value = "CASHBACK DAPUR";
+            worksheet.getCell(`O${secondHeaderRow}`).value = "KOP. FORBIS";
 
-            worksheet.getCell('P2').value = "OPERASIONAL (80%)";
-            worksheet.getCell('Q2').value = "SHU (20%)";
+            worksheet.getCell(`P${secondHeaderRow}`).value = "OPERASIONAL (80%)";
+            worksheet.getCell(`Q${secondHeaderRow}`).value = "SHU (20%)";
 
-            worksheet.getCell('R2').value = "PEKERJA 1";
-            worksheet.getCell('S2').value = "PEKERJA 2";
-            worksheet.getCell('T2').value = "PEKERJA 3";
-            worksheet.getCell('U2').value = "PEKERJA 4";
-            worksheet.getCell('V2').value = "DLL";
+            worksheet.getCell(`R${secondHeaderRow}`).value = "PEKERJA 1";
+            worksheet.getCell(`S${secondHeaderRow}`).value = "PEKERJA 2";
+            worksheet.getCell(`T${secondHeaderRow}`).value = "PEKERJA 3";
+            worksheet.getCell(`U${secondHeaderRow}`).value = "PEKERJA 4";
+            worksheet.getCell(`V${secondHeaderRow}`).value = "DLL";
 
-            // Merge A1:A2, B1:B2, etc for first 13 cols
+            // Merge startRowTable:secondHeaderRow
             ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'].forEach(col => {
-                worksheet.mergeCells(`${col}1:${col}2`);
+                worksheet.mergeCells(`${col}${startRowTable}:${col}${secondHeaderRow}`);
             });
 
             // Styling (Blue Header, Bold, Borders)
@@ -224,7 +193,7 @@ export default function ProfitPage() {
             } as unknown as ExcelJS.Borders;
 
             // Apply style to all header cells
-            for (let r = 1; r <= 2; r++) {
+            for (let r = startRowTable; r <= secondHeaderRow; r++) {
                 for (let c = 1; c <= 22; c++) {
                     const cell = worksheet.getCell(r, c);
                     cell.fill = headerFill;
@@ -235,7 +204,7 @@ export default function ProfitPage() {
             }
 
             // --- 2. Add Data ---
-            let currentRow = 3;
+            let currentRow = startRowTable + 2;
             data.forEach((item, index) => {
                 const row = worksheet.getRow(currentRow);
 
@@ -363,10 +332,11 @@ export default function ProfitPage() {
 
             const doc = new jsPDF('l', 'mm', 'a4'); // Landscape
 
-            doc.setFontSize(16);
-            doc.text(`Laporan Pembagian Laba (${activeTab}): ${periodeName}`, 14, 15);
+            const startY = applyPDFHeader(doc, `Laporan Pembagian Laba (${activeTab}): ${periodeName}`);
+
             doc.setFontSize(10);
-            doc.text(`Generated by: ${data[0]?.nama_barang ? 'System' : 'System'}`, 14, 22);
+            const subTitleY = startY;
+            doc.text(`Periode: ${startDate} s/d ${endDate}`, 14, subTitleY);
 
             const tableColumn = [
                 "No", "Tgl", "Barang", "Banyak", "Modal", "Jual", "Laba",
@@ -437,8 +407,9 @@ export default function ProfitPage() {
             autoTable(doc, {
                 head: [tableColumn],
                 body: tableRows,
-                startY: 30,
-                styles: { fontSize: 6, cellPadding: 1 },
+                startY: startY + 10,
+                theme: 'grid',
+                styles: { fontSize: 6, cellPadding: 1, lineColor: [200, 200, 200], lineWidth: 0.1 },
                 headStyles: { fillColor: [22, 163, 74] }, // Green
             });
 

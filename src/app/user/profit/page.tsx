@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { applyExcelHeader, applyPDFHeader } from '@/lib/export-utils';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -58,28 +59,32 @@ export default function UserProfitPage() {
             const workbook = new ExcelJS.Workbook();
             const worksheet = workbook.addWorksheet(`Laba ${activeTab}`, { views: [{ state: 'frozen', xSplit: 0, ySplit: 2 }] });
 
-            worksheet.getCell('A1').value = "NO"; worksheet.getCell('B1').value = "Tgl";
-            worksheet.getCell('C1').value = "NO. FAKTUR"; worksheet.getCell('D1').value = "NAMA BARANG";
-            worksheet.getCell('E1').value = "BANYAK"; worksheet.getCell('F1').value = "SATUAN";
-            worksheet.getCell('G1').value = "HARGA SUPLIER"; worksheet.getCell('H1').value = "JUMLAH";
-            worksheet.getCell('I1').value = "HARGA KOPERASI"; worksheet.getCell('J1').value = "JUMLAH";
-            worksheet.getCell('K1').value = "PROFIT"; worksheet.getCell('L1').value = "ZAKAT";
-            worksheet.getCell('M1').value = "SISA";
-            worksheet.getCell('N1').value = "SPJG"; worksheet.mergeCells('N1:O1');
-            worksheet.getCell('P1').value = "ALOKASI KOP"; worksheet.mergeCells('P1:Q1');
-            worksheet.getCell('R1').value = "RINCIAN OPERASIONAL"; worksheet.mergeCells('R1:V1');
-            worksheet.getCell('N2').value = "CASHBACK DAPUR"; worksheet.getCell('O2').value = "KOP. FORBIS";
-            worksheet.getCell('P2').value = "OPERASIONAL (80%)"; worksheet.getCell('Q2').value = "SHU (20%)";
-            worksheet.getCell('R2').value = "PEKERJA 1"; worksheet.getCell('S2').value = "PEKERJA 2";
-            worksheet.getCell('T2').value = "PEKERJA 3"; worksheet.getCell('U2').value = "PEKERJA 4";
-            worksheet.getCell('V2').value = "DLL";
-            ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'].forEach(col => worksheet.mergeCells(`${col}1:${col}2`));
+            const startRowTable = applyExcelHeader(worksheet, `Laporan Pembagian Laba ${activeTab} - ${periodeName}`, 'V');
+
+            worksheet.getCell(`A${startRowTable}`).value = "NO"; worksheet.getCell(`B${startRowTable}`).value = "Tgl";
+            worksheet.getCell(`C${startRowTable}`).value = "NO. FAKTUR"; worksheet.getCell(`D${startRowTable}`).value = "NAMA BARANG";
+            worksheet.getCell(`E${startRowTable}`).value = "BANYAK"; worksheet.getCell(`F${startRowTable}`).value = "SATUAN";
+            worksheet.getCell(`G${startRowTable}`).value = "HARGA SUPLIER"; worksheet.getCell(`H${startRowTable}`).value = "JUMLAH";
+            worksheet.getCell(`I${startRowTable}`).value = "HARGA KOPERASI"; worksheet.getCell(`J${startRowTable}`).value = "JUMLAH";
+            worksheet.getCell(`K${startRowTable}`).value = "PROFIT"; worksheet.getCell(`L${startRowTable}`).value = "ZAKAT";
+            worksheet.getCell(`M${startRowTable}`).value = "SISA";
+            worksheet.getCell(`N${startRowTable}`).value = "SPJG"; worksheet.mergeCells(`N${startRowTable}:O${startRowTable}`);
+            worksheet.getCell(`P${startRowTable}`).value = "ALOKASI KOP"; worksheet.mergeCells(`P${startRowTable}:Q${startRowTable}`);
+            worksheet.getCell(`R${startRowTable}`).value = "RINCIAN OPERASIONAL"; worksheet.mergeCells(`R${startRowTable}:V${startRowTable}`);
+
+            const secondHeaderRow = startRowTable + 1;
+            worksheet.getCell(`N${secondHeaderRow}`).value = "CASHBACK DAPUR"; worksheet.getCell(`O${secondHeaderRow}`).value = "KOP. FORBIS";
+            worksheet.getCell(`P${secondHeaderRow}`).value = "OPERASIONAL (80%)"; worksheet.getCell(`Q${secondHeaderRow}`).value = "SHU (20%)";
+            worksheet.getCell(`R${secondHeaderRow}`).value = "PEKERJA 1"; worksheet.getCell(`S${secondHeaderRow}`).value = "PEKERJA 2";
+            worksheet.getCell(`T${secondHeaderRow}`).value = "PEKERJA 3"; worksheet.getCell(`U${secondHeaderRow}`).value = "PEKERJA 4";
+            worksheet.getCell(`V${secondHeaderRow}`).value = "DLL";
+            ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'].forEach(col => worksheet.mergeCells(`${col}${startRowTable}:${col}${secondHeaderRow}`));
 
             const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF00B0F0' } } as unknown as ExcelJS.Fill;
             const fontBold = { bold: true, name: 'Arial', size: 10 } as unknown as ExcelJS.Font;
             const borderStyle = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } } as unknown as ExcelJS.Borders;
 
-            for (let r = 1; r <= 2; r++) {
+            for (let r = startRowTable; r <= secondHeaderRow; r++) {
                 for (let c = 1; c <= 22; c++) {
                     const cell = worksheet.getCell(r, c);
                     cell.fill = headerFill; cell.font = fontBold; cell.border = borderStyle;
@@ -87,7 +92,7 @@ export default function UserProfitPage() {
                 }
             }
 
-            let currentRow = 3;
+            let currentRow = startRowTable + 2;
             data.forEach((item, index) => {
                 const row = worksheet.getRow(currentRow);
                 row.getCell(1).value = index + 1; row.getCell(2).value = item.tanggal;
@@ -157,10 +162,11 @@ export default function UserProfitPage() {
             if (error || !data) { alert('Gagal mengambil data: ' + error); setLoading(false); return; }
 
             const doc = new jsPDF('l', 'mm', 'a4');
-            doc.setFontSize(16);
-            doc.text(`Laporan Pembagian Laba (${activeTab}): ${periodeName}`, 14, 15);
+            const startY = applyPDFHeader(doc, `Laporan Pembagian Laba (${activeTab}): ${periodeName}`);
+
             doc.setFontSize(10);
-            doc.text('Generated by: System', 14, 22);
+            const subTitleY = startY;
+            doc.text(`Periode: ${startDate} s/d ${endDate}`, 14, subTitleY);
 
             const tableColumn = ["No", "Tgl", "Barang", "Banyak", "Modal", "Jual", "Laba", "Zakat", "Sisa", "Cashback", "Kop", "Ops", "SHU", "Pekerja A", "Pekerja B", "Pekerja C", "Pekerja D", "DLL"];
             const tableRows: any[] = data.map((item, i) => [
@@ -204,7 +210,14 @@ export default function UserProfitPage() {
                 new Intl.NumberFormat('id-ID').format(totals.dll),
             ]);
 
-            autoTable(doc, { head: [tableColumn], body: tableRows, startY: 30, styles: { fontSize: 6, cellPadding: 1 }, headStyles: { fillColor: [22, 163, 74] } });
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: startY + 10,
+                theme: 'grid',
+                styles: { fontSize: 6, cellPadding: 1, lineColor: [200, 200, 200], lineWidth: 0.1 },
+                headStyles: { fillColor: [22, 163, 74] }
+            });
             doc.save(`Laporan_Laba_${getFullPeriodeName()}.pdf`);
         } catch (e) { console.error(e); alert('Gagal export PDF.'); }
         setLoading(false);
