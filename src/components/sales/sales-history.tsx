@@ -105,7 +105,7 @@ async function exportPDFForKategori(data: Sale[], kategori: string, date: string
     const printNumber = `INV-${Date.now().toString().slice(-6)}`;
     const logoBase64 = await getLogoBase64();
 
-    const startY = applyPDFHeader(doc, `Laporan Penjualan`, logoBase64);
+    const startY = applyPDFHeader(doc, `INVOICE`, logoBase64);
     const totalSum = data.reduce((acc, sale) => acc + sale.total_harga, 0)
 
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
@@ -150,18 +150,17 @@ export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
     const [loadingAction, setLoadingAction] = useState<number | null>(null);
 
     // Fetch data if initialSales not provided
+    // Fetch data
     useEffect(() => {
-        if (!initialSales) {
-            const loadData = async () => {
-                setLoading(true);
-                const formattedDate = format(date, 'yyyy-MM-dd');
-                const result = await getSalesByDate(formattedDate);
-                setFetchedSales(result.data || []);
-                setLoading(false);
-            };
-            loadData();
-        }
-    }, [date, initialSales]);
+        const loadData = async () => {
+            setLoading(true);
+            const formattedDate = format(date, 'yyyy-MM-dd');
+            const result = await getSalesByDate(formattedDate, showTrash);
+            setFetchedSales(result.data || []);
+            setLoading(false);
+        };
+        loadData();
+    }, [date, showTrash, triggerFetch]);
 
     const activeSales = initialSales || fetchedSales;
 
@@ -251,6 +250,14 @@ export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
                                     selected={date}
                                     onSelect={(d) => d && setDate(d)}
                                     initialFocus
+                                    modifiers={{
+                                        past: { before: new Date() },
+                                        today_custom: new Date()
+                                    }}
+                                    modifiersClassNames={{
+                                        past: "rdp-day_past",
+                                        today_custom: "rdp-day_today_custom"
+                                    }}
                                 />
                             </PopoverContent>
                         </Popover>

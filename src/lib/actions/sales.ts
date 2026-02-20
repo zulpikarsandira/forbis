@@ -74,7 +74,7 @@ export async function getSales(dateFrom?: string, dateTo?: string) {
 // Get sales for TODAY only
 export async function getTodaySales() {
     const supabase = await createSupabaseServerClient();
-    const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local timezone
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
 
     const { data, error } = await supabase
         .from('barang_laku')
@@ -90,12 +90,13 @@ export async function getTodaySales() {
 // Get list of unique dates that have sales data (excluding today)
 export async function getHistoryDates() {
     const supabase = await createSupabaseServerClient();
-    const today = new Date().toLocaleDateString('en-CA');
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
 
     const { data, error } = await supabase
         .from('barang_laku')
         .select('tanggal')
         .neq('tanggal', today)
+        .eq('is_deleted', false) // Only show dates with active sales
         .order('tanggal', { ascending: false });
 
     if (error) return { dates: [] };
@@ -106,13 +107,14 @@ export async function getHistoryDates() {
 }
 
 // Get sales for a specific date (for history view)
-export async function getSalesByDate(date: string) {
+export async function getSalesByDate(date: string, onlyDeleted = false) {
     const supabase = await createSupabaseServerClient();
 
     const { data, error } = await supabase
         .from('barang_laku')
         .select('*')
         .eq('tanggal', date)
+        .eq('is_deleted', onlyDeleted)
         .order('id', { ascending: false });
 
     if (error) return { data: [], error: error.message };

@@ -403,3 +403,18 @@
   -ms-transform: translateY(-50%);
   transform: translateY(-50%);
 }
+/* Calendar Highlighting */
+.rdp-day_past:not(.rdp-day_selected):not(.rdp-day_outside) {
+  background-color: color-mix(in srgb, #10B981 15%, transparent) !important;
+  color: #059669 !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+}
+
+.rdp-day_today_custom:not(.rdp-day_selected):not(.rdp-day_outside) {
+  background-color: color-mix(in srgb, #3B82F6 15%, transparent) !important;
+  color: #2563EB !important;
+  font-weight: 700 !important;
+  border: 2px solid #3B82F6 !important;
+  border-radius: 8px !important;
+}
