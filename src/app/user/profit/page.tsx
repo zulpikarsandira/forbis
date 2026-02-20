@@ -213,7 +213,7 @@ export default function UserProfitPage() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900">Pembagian Laba</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">Pembagian Laba</h1>
                 <p className="text-muted-foreground">Lihat dan export laporan pembagian laba.</p>
             </div>
 
@@ -266,10 +266,10 @@ export default function UserProfitPage() {
                             )}
 
                             {!loading && allocationData.length === 0 && (
-                                <div className="flex flex-col items-center justify-center py-20 text-center text-gray-400 bg-white rounded-[2rem] border border-gray-100">
-                                    <p className="text-lg font-medium">Belum ada data pembagian laba</p>
-                                    <p className="text-sm mt-1">untuk periode <b>{getFullPeriodeName()}</b></p>
-                                    <p className="text-xs mt-4 text-gray-300">Data akan muncul setelah Admin melakukan generate & lock.</p>
+                                <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground bg-card rounded-[2rem] border border-border">
+                                    <p className="text-lg font-medium text-foreground">Belum ada data pembagian laba</p>
+                                    <p className="text-sm mt-1">untuk periode <b className="text-foreground">{getFullPeriodeName()}</b></p>
+                                    <p className="text-xs mt-4 text-muted-foreground">Data akan muncul setelah Admin melakukan generate & lock.</p>
                                 </div>
                             )}
 
@@ -303,10 +303,10 @@ export default function UserProfitPage() {
                                                 />
                                             </div>
 
-                                            <div className="rounded-xl border border-gray-100 overflow-hidden">
+                                            <div className="rounded-xl border border-border bg-card overflow-hidden">
                                                 <div className="overflow-x-auto">
                                                     <Table className="min-w-[500px]">
-                                                        <TableHeader>
+                                                        <TableHeader className="bg-muted/50">
                                                             <TableRow>
                                                                 <TableHead>Kategori</TableHead>
                                                                 <TableHead className="text-right">Jumlah</TableHead>
@@ -314,16 +314,16 @@ export default function UserProfitPage() {
                                                         </TableHeader>
                                                         <TableBody>
                                                             {allocationData.map((item) => (
-                                                                <TableRow key={item.id}>
-                                                                    <TableCell className="font-medium whitespace-nowrap">{item.keterangan}</TableCell>
-                                                                    <TableCell className="text-right font-mono whitespace-nowrap">
+                                                                <TableRow key={item.id} className="hover:bg-muted/50 transition-colors">
+                                                                    <TableCell className="font-medium text-foreground whitespace-nowrap">{item.keterangan}</TableCell>
+                                                                    <TableCell className="text-right font-mono text-foreground whitespace-nowrap">
                                                                         {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(item.jumlah)}
                                                                     </TableCell>
                                                                 </TableRow>
                                                             ))}
-                                                            <TableRow className="bg-gray-50 font-bold">
-                                                                <TableCell>TOTAL</TableCell>
-                                                                <TableCell className="text-right whitespace-nowrap">
+                                                            <TableRow className="bg-muted font-bold border-t-2 border-border">
+                                                                <TableCell className="text-muted-foreground">TOTAL</TableCell>
+                                                                <TableCell className="text-right text-foreground whitespace-nowrap">
                                                                     {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(allocationData.reduce((a, b) => a + b.jumlah, 0))}
                                                                 </TableCell>
                                                             </TableRow>
@@ -332,7 +332,7 @@ export default function UserProfitPage() {
                                                 </div>
                                             </div>
 
-                                            <div className="mt-4 text-[10px] sm:text-xs text-gray-500 text-right italic">
+                                            <div className="mt-4 text-[10px] sm:text-xs text-muted-foreground text-right italic">
                                                 Generated by: {allocationData[0]?.generated_by} at {new Date(allocationData[0]?.generated_at).toLocaleString()}
                                             </div>
                                         </CardContent>

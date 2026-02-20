@@ -42,12 +42,12 @@ export default function DashboardLayout({
     const isDashboardPage = pathname === '/dashboard';
 
     return (
-        <div className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
+        <div className="min-h-screen bg-background flex font-sans text-foreground transition-colors duration-300">
             {/* Left Sidebar (Desktop) */}
             <Sidebar />
 
             {/* Mobile Header */}
-            <div className="lg:hidden fixed top-0 w-full bg-white z-50 border-b p-4 flex justify-between items-center shadow-sm">
+            <div className="lg:hidden fixed top-0 w-full bg-card z-50 border-b border-border p-4 flex justify-between items-center shadow-sm">
                 <div className="flex items-center gap-3">
                     <img
                         src="/images/1000075381-removebg-preview.png"
@@ -55,7 +55,7 @@ export default function DashboardLayout({
                         className="h-10 w-auto object-contain"
                     />
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-gray-600">
+                <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-muted-foreground">
                     <Menu className="h-6 w-6" />
                 </Button>
             </div>
@@ -67,25 +67,25 @@ export default function DashboardLayout({
                     onClick={() => setIsMobileMenuOpen(false)}
                 >
                     <div
-                        className="w-[280px] h-full bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out translate-x-0"
+                        className="w-[280px] h-full bg-card shadow-2xl flex flex-col transition-transform duration-300 ease-out translate-x-0"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="p-6 border-b flex justify-between items-center bg-white">
+                        <div className="p-6 border-b border-border flex justify-between items-center bg-card">
                             <div className="flex items-center gap-2">
                                 <img
                                     src="/images/1000075381-removebg-preview.png"
                                     alt="Logo Forbis"
                                     className="h-10 w-auto object-contain"
                                 />
-                                <span className="font-bold text-xl text-gray-900 ml-1">Menu</span>
+                                <span className="font-bold text-xl text-foreground ml-1">Menu</span>
                             </div>
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => setIsMobileMenuOpen(false)}
-                                className="rounded-full hover:bg-gray-100"
+                                className="rounded-full hover:bg-muted"
                             >
-                                <PanelRightClose className="h-5 w-5 text-gray-500" />
+                                <PanelRightClose className="h-5 w-5 text-muted-foreground" />
                             </Button>
                         </div>
 
@@ -109,11 +109,11 @@ export default function DashboardLayout({
                                             className={cn(
                                                 "flex items-center px-4 py-3.5 rounded-2xl transition-all border border-transparent",
                                                 isActive
-                                                    ? "text-primary bg-indigo-50/80 border-indigo-100 font-semibold"
-                                                    : "text-gray-600 hover:text-primary hover:bg-gray-50"
+                                                    ? "text-primary bg-primary/10 border-primary/20 font-semibold"
+                                                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                                             )}
                                         >
-                                            <Icon className={cn("h-5 w-5 mr-3", isActive ? "text-primary" : "text-gray-400")} />
+                                            <Icon className={cn("h-5 w-5 mr-3", isActive ? "text-primary" : "text-muted-foreground")} />
                                             {label}
                                         </div>
                                     </Link>
@@ -121,10 +121,10 @@ export default function DashboardLayout({
                             })}
                         </nav>
 
-                        <div className="p-6 border-t bg-gray-50/50">
+                        <div className="p-6 border-t border-border bg-muted/30">
                             <Button
                                 variant="outline"
-                                className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 border-gray-200 rounded-2xl py-6"
+                                className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 border-border rounded-2xl py-6"
                                 onClick={async () => {
                                     const supabase = createClient();
                                     await supabase.auth.signOut();
@@ -149,9 +149,9 @@ export default function DashboardLayout({
                             variant="outline"
                             size="icon"
                             onClick={() => setIsRightSidebarOpen(true)}
-                            className="bg-white shadow-sm hover:bg-gray-50"
+                            className="bg-card shadow-sm hover:bg-muted border-border"
                         >
-                            <PanelRightOpen className="h-5 w-5 text-gray-600" />
+                            <PanelRightOpen className="h-5 w-5 text-muted-foreground" />
                         </Button>
                     </div>
                 )}

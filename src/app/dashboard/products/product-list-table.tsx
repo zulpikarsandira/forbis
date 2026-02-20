@@ -145,8 +145,8 @@ export default function ProductListTable({ products, currentPage, totalPages, to
             {/* Bulk Actions Bar */}
             {(selectedIds.length > 0 || isSelectAllMode) && (
                 <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                    <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-red-700">
+                    <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
                             <BadgeCheck className="h-5 w-5" />
                             <span className="font-medium">
                                 {isSelectAllMode
@@ -156,7 +156,7 @@ export default function ProductListTable({ products, currentPage, totalPages, to
                         </div>
                         <div className="flex items-center gap-2">
                             {isSelectAllMode ? (
-                                <Button size="sm" variant="ghost" onClick={clearSelection} className="text-red-600 hover:text-red-700 hover:bg-red-100">
+                                <Button size="sm" variant="ghost" onClick={clearSelection} className="text-red-600 hover:text-red-700 hover:bg-red-500/10">
                                     Batalkan
                                 </Button>
                             ) : null}
@@ -174,7 +174,7 @@ export default function ProductListTable({ products, currentPage, totalPages, to
 
                     {/* "Select All Global" Prompt */}
                     {!isSelectAllMode && isAllPageSelected && totalItems > products.length && (
-                        <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg text-center text-sm text-blue-800">
+                        <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg text-center text-sm text-blue-600 dark:text-blue-400">
                             <span>Baru {selectedIds.length} barang di halaman ini yang terpilih. </span>
                             <button
                                 onClick={selectAllGlobal}
@@ -187,10 +187,10 @@ export default function ProductListTable({ products, currentPage, totalPages, to
                 </div>
             )}
 
-            <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-card rounded-[2rem] shadow-sm border border-border overflow-hidden">
                 <div className="overflow-x-auto">
                     <Table className="min-w-[1000px]">
-                        <TableHeader className="bg-gray-50/50">
+                        <TableHeader className="bg-muted/50">
                             <TableRow>
                                 <TableHead className="w-[50px] text-center">
                                     <Checkbox
@@ -218,7 +218,7 @@ export default function ProductListTable({ products, currentPage, totalPages, to
                                 </TableRow>
                             ) : (
                                 products.map((product, index) => (
-                                    <TableRow key={product.id} className={(selectedIds.includes(product.id) || isSelectAllMode) ? "bg-blue-50/50" : ""}>
+                                    <TableRow key={product.id} className={(selectedIds.includes(product.id) || isSelectAllMode) ? "bg-blue-500/5 dark:bg-blue-500/10" : ""}>
                                         <TableCell className="text-center">
                                             <Checkbox
                                                 checked={selectedIds.includes(product.id) || isSelectAllMode}
@@ -227,13 +227,13 @@ export default function ProductListTable({ products, currentPage, totalPages, to
                                             />
                                         </TableCell>
                                         <TableCell>{(currentPage - 1) * 10 + index + 1}</TableCell>
-                                        <TableCell className="font-mono text-xs text-gray-500 whitespace-nowrap">{product.kode}</TableCell>
-                                        <TableCell className="font-medium text-gray-900 whitespace-nowrap">{product.nama}</TableCell>
-                                        <TableCell className="text-gray-500 whitespace-nowrap">{product.jenis || '-'}</TableCell>
-                                        <TableCell className="text-right font-mono text-gray-600 whitespace-nowrap">
+                                        <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">{product.kode}</TableCell>
+                                        <TableCell className="font-medium text-foreground whitespace-nowrap">{product.nama}</TableCell>
+                                        <TableCell className="text-muted-foreground whitespace-nowrap">{product.jenis || '-'}</TableCell>
+                                        <TableCell className="text-right font-mono text-muted-foreground whitespace-nowrap">
                                             {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.modal)}
                                         </TableCell>
-                                        <TableCell className="text-right font-bold text-gray-900 whitespace-nowrap">
+                                        <TableCell className="text-right font-bold text-foreground whitespace-nowrap">
                                             {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.harga)}
                                         </TableCell>
                                         <TableCell className="text-center">
@@ -244,14 +244,14 @@ export default function ProductListTable({ products, currentPage, totalPages, to
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                                                    className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
                                                 >
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-8 w-8 text-orange-500 hover:text-orange-600 hover:bg-orange-50"
+                                                    className="h-8 w-8 text-orange-500 hover:text-orange-600 hover:bg-orange-500/10"
                                                     onClick={() => setEditingProduct(product)}
                                                 >
                                                     <Edit className="h-4 w-4" />
@@ -259,7 +259,7 @@ export default function ProductListTable({ products, currentPage, totalPages, to
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                    className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-500/10"
                                                     onClick={() => setDeletingProduct(product)}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
@@ -276,8 +276,8 @@ export default function ProductListTable({ products, currentPage, totalPages, to
 
             {/* Pagination */}
             {totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-4 border-t">
-                    <div className="text-sm text-gray-500">
+                <div className="flex items-center justify-between px-4 py-4 border-t border-border">
+                    <div className="text-sm text-muted-foreground">
                         Menampilkan {products.length} dari {totalItems} data
                     </div>
                     <div className="flex items-center space-x-2">

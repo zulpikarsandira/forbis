@@ -60,8 +60,8 @@ export default function UserSettingsPage() {
         <div className="max-w-2xl mx-auto space-y-8">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">Profil & Keamanan</h1>
-                    <p className="text-gray-500">Kelola informasi akun dan kata sandi Anda</p>
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">Profil & Keamanan</h1>
+                    <p className="text-muted-foreground">Kelola informasi akun dan kata sandi Anda</p>
                 </div>
                 <Button variant="outline" onClick={handleLogout} className="text-red-600 border-red-200 hover:bg-red-50 gap-2">
                     <LogOut className="h-4 w-4" />
@@ -71,7 +71,7 @@ export default function UserSettingsPage() {
 
             <div className="grid grid-cols-1 gap-8">
                 {/* Profile Card */}
-                <Card className="shadow-sm border-gray-100 rounded-[2rem]">
+                <Card className="shadow-sm border-border bg-card rounded-[2rem]">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <User className="h-5 w-5 text-primary" />
@@ -80,13 +80,13 @@ export default function UserSettingsPage() {
                         <CardDescription>Informasi akun Anda saat ini</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex items-center gap-4 p-4 rounded-2xl bg-indigo-50/50">
-                            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg">
+                        <div className="flex items-center gap-4 p-4 rounded-2xl bg-primary/5">
+                            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
                                 {currentUser.email?.[0].toUpperCase()}
                             </div>
                             <div>
-                                <p className="font-bold text-gray-900">{currentUser.email}</p>
-                                <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none">
+                                <p className="font-bold text-foreground">{currentUser.email}</p>
+                                <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20 border-none">
                                     <ShieldCheck className="h-3 w-3 mr-1" />
                                     User Aktif
                                 </Badge>
@@ -96,7 +96,7 @@ export default function UserSettingsPage() {
                 </Card>
 
                 {/* Change Password Card */}
-                <Card className="shadow-sm border-gray-100 rounded-[2rem]">
+                <Card className="shadow-sm border-border bg-card rounded-[2rem]">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Key className="h-5 w-5 text-primary" />
@@ -150,7 +150,9 @@ export default function UserSettingsPage() {
                             {message && (
                                 <div className={cn(
                                     "p-4 rounded-xl text-sm font-medium",
-                                    message.type === 'success' ? "bg-green-50 text-green-700 border border-green-100" : "bg-red-50 text-red-700 border border-red-100"
+                                    message.type === 'success'
+                                        ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20"
+                                        : "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
                                 )}>
                                     {message.text}
                                 </div>

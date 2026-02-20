@@ -29,8 +29,8 @@ export function ProfitChart({ data }: ProfitChartProps) {
                         '#14B8A6', // Bendahara - Teal
                         '#64748B', // SHU - Slate
                     ],
-                    borderColor: '#ffffff',
-                    borderWidth: 2,
+                    borderColor: 'transparent',
+                    borderWidth: 0,
                 },
             ],
         };
@@ -44,6 +44,7 @@ export function ProfitChart({ data }: ProfitChartProps) {
                 labels: {
                     usePointStyle: true,
                     padding: 20,
+                    color: '#9CA3AF',
                 },
             },
             tooltip: {

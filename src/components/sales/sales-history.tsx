@@ -193,12 +193,12 @@ function HistoryKategoriTable({ data: initialData, kategori, date, variant }: {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <h3 className={cn(
                     'text-lg font-bold px-4 py-2 rounded-lg border-l-4 shadow-sm inline-flex items-center gap-2',
-                    variant === 'orange' ? 'bg-orange-50 text-orange-700 border-orange-500' : 'bg-blue-50 text-blue-700 border-blue-500'
+                    variant === 'orange' ? 'bg-orange-500/10 text-orange-600 border-orange-500' : 'bg-blue-500/10 text-blue-600 border-blue-500'
                 )}>
                     Penjualan {kategori}
                     <span className="text-sm font-normal opacity-70">({data.length} transaksi)</span>
                     {deletedItems.length > 0 && (
-                        <span className="ml-1 text-xs bg-red-100 text-red-600 rounded-full px-2 py-0.5 font-semibold">
+                        <span className="ml-1 text-xs bg-red-500/10 text-red-600 rounded-full px-2 py-0.5 font-semibold">
                             {deletedItems.length} dihapus
                         </span>
                     )}
@@ -226,7 +226,7 @@ function HistoryKategoriTable({ data: initialData, kategori, date, variant }: {
             <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <Table className="min-w-[520px]">
-                        <TableHeader className="bg-gray-100/50">
+                        <TableHeader className="bg-muted/50">
                             <TableRow>
                                 <TableHead className="w-10">No</TableHead>
                                 <TableHead>Tanggal</TableHead>
@@ -238,21 +238,21 @@ function HistoryKategoriTable({ data: initialData, kategori, date, variant }: {
                         </TableHeader>
                         <TableBody>
                             {data.length > 0 ? data.map((sale, i) => (
-                                <TableRow key={sale.id} className="hover:bg-gray-50/50">
-                                    <TableCell className="text-center text-gray-400 text-sm">{i + 1}</TableCell>
-                                    <TableCell className="text-gray-500 whitespace-nowrap">{sale.tanggal}</TableCell>
-                                    <TableCell className="font-semibold">{sale.nama}</TableCell>
+                                <TableRow key={sale.id} className="hover:bg-muted/50 transition-colors">
+                                    <TableCell className="text-center text-muted-foreground text-sm">{i + 1}</TableCell>
+                                    <TableCell className="text-muted-foreground whitespace-nowrap">{sale.tanggal}</TableCell>
+                                    <TableCell className="font-semibold text-foreground">{sale.nama}</TableCell>
                                     <TableCell className="text-center">
-                                        <span className="bg-gray-100 px-2 py-1 rounded text-xs font-bold text-gray-600">{sale.jumlah}</span>
+                                        <span className="bg-muted px-2 py-1 rounded text-xs font-bold text-muted-foreground">{sale.jumlah}</span>
                                     </TableCell>
-                                    <TableCell className="text-right font-mono font-bold">{formatRupiah(sale.total_harga)}</TableCell>
+                                    <TableCell className="text-right font-mono font-bold text-foreground">{formatRupiah(sale.total_harga)}</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex items-center justify-center gap-1">
                                             {/* Soft delete — moves to trash, restorable */}
                                             <button
                                                 onClick={() => handleDelete(sale)}
                                                 disabled={deletingId === sale.id || permDeletingId === sale.id}
-                                                className="p-1.5 rounded-lg text-amber-500 hover:text-amber-700 hover:bg-amber-50 transition-colors disabled:opacity-40"
+                                                className="p-1.5 rounded-lg text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 transition-colors disabled:opacity-40"
                                                 title="Hapus (bisa di-restore)"
                                             >
                                                 {deletingId === sale.id
@@ -263,7 +263,7 @@ function HistoryKategoriTable({ data: initialData, kategori, date, variant }: {
                                             <button
                                                 onClick={() => setConfirmPermDelete(sale)}
                                                 disabled={deletingId === sale.id || permDeletingId === sale.id}
-                                                className="p-1.5 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors disabled:opacity-40"
+                                                className="p-1.5 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors disabled:opacity-40"
                                                 title="Hapus permanen (tidak bisa di-restore)"
                                             >
                                                 {permDeletingId === sale.id
@@ -284,10 +284,10 @@ function HistoryKategoriTable({ data: initialData, kategori, date, variant }: {
                                 </TableRow>
                             )}
                             {data.length > 0 && (
-                                <TableRow className="bg-gray-50 font-bold border-t-2">
-                                    <TableCell colSpan={3} className="text-right text-gray-700">TOTAL</TableCell>
-                                    <TableCell className="text-center">{data.reduce((s, r) => s + r.jumlah, 0)}</TableCell>
-                                    <TableCell className="text-right font-mono">{formatRupiah(data.reduce((s, r) => s + r.total_harga, 0))}</TableCell>
+                                <TableRow className="bg-muted/50 font-bold border-t-2 border-border">
+                                    <TableCell colSpan={3} className="text-right text-muted-foreground">TOTAL</TableCell>
+                                    <TableCell className="text-center text-foreground">{data.reduce((s, r) => s + r.jumlah, 0)}</TableCell>
+                                    <TableCell className="text-right font-mono text-foreground">{formatRupiah(data.reduce((s, r) => s + r.total_harga, 0))}</TableCell>
                                     <TableCell />
                                 </TableRow>
                             )}
@@ -298,10 +298,10 @@ function HistoryKategoriTable({ data: initialData, kategori, date, variant }: {
 
             {/* Trash section */}
             {deletedItems.length > 0 && (
-                <div className="rounded-xl border border-dashed border-red-200 bg-red-50/40 overflow-hidden">
+                <div className="rounded-xl border border-dashed border-red-500/30 bg-red-500/5 overflow-hidden">
                     <button
                         onClick={() => setShowTrash(p => !p)}
-                        className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                        className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors"
                     >
                         <span className="flex items-center gap-2">
                             <Trash2 className="h-4 w-4" />
@@ -310,21 +310,21 @@ function HistoryKategoriTable({ data: initialData, kategori, date, variant }: {
                         {showTrash ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </button>
                     {showTrash && (
-                        <div className="overflow-x-auto border-t border-red-100">
+                        <div className="overflow-x-auto border-t border-red-500/10">
                             <Table className="min-w-[500px]">
                                 <TableBody>
                                     {deletedItems.map(sale => (
-                                        <TableRow key={sale.id} className="opacity-70 bg-red-50/60">
-                                            <TableCell className="w-10 text-center text-gray-400 text-sm line-through">#{sale.id}</TableCell>
-                                            <TableCell className="text-gray-400 whitespace-nowrap line-through">{sale.tanggal}</TableCell>
-                                            <TableCell className="text-gray-500 line-through">{sale.nama}</TableCell>
-                                            <TableCell className="text-center text-gray-400 line-through">{sale.jumlah}</TableCell>
-                                            <TableCell className="text-right font-mono text-gray-400 line-through">{formatRupiah(sale.total_harga)}</TableCell>
+                                        <TableRow key={sale.id} className="opacity-70 bg-red-500/5">
+                                            <TableCell className="w-10 text-center text-muted-foreground text-sm line-through">#{sale.id}</TableCell>
+                                            <TableCell className="text-muted-foreground whitespace-nowrap line-through">{sale.tanggal}</TableCell>
+                                            <TableCell className="text-muted-foreground line-through">{sale.nama}</TableCell>
+                                            <TableCell className="text-center text-muted-foreground line-through">{sale.jumlah}</TableCell>
+                                            <TableCell className="text-right font-mono text-muted-foreground line-through">{formatRupiah(sale.total_harga)}</TableCell>
                                             <TableCell className="text-center">
                                                 <button
                                                     onClick={() => handleRestore(sale)}
                                                     disabled={restoringId === sale.id}
-                                                    className="p-1.5 rounded-lg text-green-600 hover:bg-green-100 transition-colors disabled:opacity-50 flex items-center gap-1 text-xs font-medium"
+                                                    className="p-1.5 rounded-lg text-green-600 hover:bg-green-500/20 transition-colors disabled:opacity-50 flex items-center gap-1 text-xs font-medium"
                                                     title="Restore data ini"
                                                 >
                                                     {restoringId === sale.id
@@ -403,11 +403,11 @@ export function SalesHistory() {
         <div className="space-y-8">
             <div className="flex flex-col lg:flex-row gap-8">
                 {/* Calendar Card */}
-                <div className="bg-white rounded-2xl border shadow-sm p-4 w-fit mx-auto lg:mx-0 shrink-0">
-                    <p className="text-sm font-medium text-gray-700 mb-3 px-1">Pilih tanggal untuk melihat data:</p>
+                <div className="bg-card rounded-2xl border border-border shadow-sm p-4 w-fit mx-auto lg:mx-0 shrink-0">
+                    <p className="text-sm font-medium text-muted-foreground mb-3 px-1">Pilih tanggal untuk melihat data:</p>
 
                     {/* Legend */}
-                    <div className="flex gap-4 mb-3 px-1 text-xs text-gray-500">
+                    <div className="flex gap-4 mb-3 px-1 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                             <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" /> Hari ini
                         </span>
@@ -473,7 +473,7 @@ export function SalesHistory() {
                 {/* Right panel - info or table */}
                 <div className="flex-1 min-w-0">
                     {!selectedDate ? (
-                        <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center text-muted-foreground rounded-2xl border border-dashed bg-gray-50/50 p-8">
+                        <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center text-muted-foreground rounded-2xl border border-dashed border-border bg-muted/30 p-8">
                             <History className="h-10 w-10 mx-auto mb-3 opacity-20" />
                             <p className="font-medium">Pilih tanggal di kalender</p>
                             <p className="text-sm mt-1">Klik tanggal yang memiliki tanda ● untuk melihat data.</p>
@@ -484,8 +484,8 @@ export function SalesHistory() {
                         </div>
                     ) : (
                         <div className="space-y-8">
-                            <p className="text-sm font-medium text-gray-600">
-                                Data penjualan: <strong className="text-gray-900">{selectedDate}</strong>
+                            <p className="text-sm font-medium text-muted-foreground">
+                                Data penjualan: <strong className="text-foreground">{selectedDate}</strong>
                             </p>
                             <HistoryKategoriTable data={salesDapur} kategori="Dapur" date={selectedDate} variant="orange" />
                             <HistoryKategoriTable data={salesWarung} kategori="Warung" date={selectedDate} variant="blue" />

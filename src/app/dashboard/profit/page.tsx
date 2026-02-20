@@ -454,7 +454,7 @@ export default function ProfitPage() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900">Pembagian Laba</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">Pembagian Laba</h1>
                 <p className="text-muted-foreground">Hitung dan distribusikan laba penjualan.</p>
             </div>
 
@@ -511,8 +511,9 @@ export default function ProfitPage() {
                         <div className="w-full md:w-2/3 space-y-6">
 
                             {totalLaba !== null && viewMode === 'calculator' && (
-                                <Card className="bg-gradient-primary text-white border-0 shadow-xl">
-                                    <CardContent className="p-8 text-center">
+                                <Card className="bg-primary text-primary-foreground border-0 shadow-xl overflow-hidden relative group">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-primary opacity-90 group-hover:opacity-100 transition-opacity" />
+                                    <CardContent className="p-8 text-center relative z-10">
                                         <h3 className="text-lg font-medium opacity-90">Total Laba {activeTab} Periode Ini</h3>
                                         <div className="text-4xl font-bold mt-2">
                                             {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(totalLaba)}
@@ -521,7 +522,7 @@ export default function ProfitPage() {
                                             <Button
                                                 onClick={handleGenerate}
                                                 disabled={generating}
-                                                className="bg-white text-blue-600 hover:bg-gray-100 font-bold border-0"
+                                                className="bg-background text-primary hover:bg-secondary font-bold border-0"
                                             >
                                                 {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                                                 Generate & Lock Pembagian
@@ -568,10 +569,10 @@ export default function ProfitPage() {
                                                 />
                                             </div>
 
-                                            <div className="rounded-xl border border-gray-100 overflow-hidden">
+                                            <div className="rounded-xl border border-border bg-card overflow-hidden">
                                                 <div className="overflow-x-auto">
                                                     <Table className="min-w-[500px]">
-                                                        <TableHeader>
+                                                        <TableHeader className="bg-muted/50">
                                                             <TableRow>
                                                                 <TableHead>Kategori</TableHead>
                                                                 <TableHead className="text-right">Jumlah</TableHead>
@@ -579,16 +580,16 @@ export default function ProfitPage() {
                                                         </TableHeader>
                                                         <TableBody>
                                                             {allocationData.map((item) => (
-                                                                <TableRow key={item.id}>
-                                                                    <TableCell className="font-medium whitespace-nowrap">{item.keterangan}</TableCell>
-                                                                    <TableCell className="text-right font-mono whitespace-nowrap">
+                                                                <TableRow key={item.id} className="hover:bg-muted/50 transition-colors">
+                                                                    <TableCell className="font-medium text-foreground whitespace-nowrap">{item.keterangan}</TableCell>
+                                                                    <TableCell className="text-right font-mono text-foreground whitespace-nowrap">
                                                                         {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(item.jumlah)}
                                                                     </TableCell>
                                                                 </TableRow>
                                                             ))}
-                                                            <TableRow className="bg-gray-50 font-bold">
-                                                                <TableCell>TOTAL</TableCell>
-                                                                <TableCell className="text-right whitespace-nowrap">
+                                                            <TableRow className="bg-muted font-bold border-t-2 border-border">
+                                                                <TableCell className="text-muted-foreground">TOTAL</TableCell>
+                                                                <TableCell className="text-right text-foreground whitespace-nowrap">
                                                                     {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(allocationData.reduce((a, b) => a + b.jumlah, 0))}
                                                                 </TableCell>
                                                             </TableRow>
@@ -597,7 +598,7 @@ export default function ProfitPage() {
                                                 </div>
                                             </div>
 
-                                            <div className="mt-4 text-[10px] sm:text-xs text-gray-500 text-right italic">
+                                            <div className="mt-4 text-[10px] sm:text-xs text-muted-foreground text-right italic">
                                                 Generated by: {allocationData[0]?.generated_by} at {new Date(allocationData[0]?.generated_at).toLocaleString()}
                                             </div>
                                         </CardContent>

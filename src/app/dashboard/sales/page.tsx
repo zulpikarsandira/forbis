@@ -71,11 +71,11 @@ export default function SalesPage() {
             {/* Header */}
             <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">Entry Penjualan</h1>
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">Entry Penjualan</h1>
                     <p className="text-muted-foreground">Input transaksi harian dan lihat riwayat penjualan.</p>
                 </div>
                 {lastUpdated && (
-                    <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <RefreshCw className="h-3 w-3" />
                         <span>Live · {lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
@@ -84,8 +84,8 @@ export default function SalesPage() {
 
             {/* Tabs */}
             <Tabs defaultValue="today">
-                <TabsList className="bg-gray-100 p-1 rounded-2xl">
-                    <TabsTrigger value="today" className="rounded-xl flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <TabsList className="bg-muted p-1 rounded-2xl border border-border">
+                    <TabsTrigger value="today" className="rounded-xl flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
                         <ShoppingCart className="h-4 w-4" />
                         Entry Hari Ini
                         {todaySales.length > 0 && (
@@ -94,7 +94,7 @@ export default function SalesPage() {
                             </span>
                         )}
                     </TabsTrigger>
-                    <TabsTrigger value="history" className="rounded-xl flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                    <TabsTrigger value="history" className="rounded-xl flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
                         <History className="h-4 w-4" />
                         History
                     </TabsTrigger>
@@ -103,8 +103,8 @@ export default function SalesPage() {
                 {/* Today Tab */}
                 <TabsContent value="today" className="space-y-12 mt-6">
                     {today && (
-                        <p className="text-sm text-gray-500 -mb-8">
-                            Menampilkan data hari ini: <strong>{today}</strong>
+                        <p className="text-sm text-muted-foreground -mb-8">
+                            Menampilkan data hari ini: <strong className="text-foreground">{today}</strong>
                         </p>
                     )}
                     <SalesTableClient data={salesDapur} title="Penjualan Dapur" variant="orange" kategori="Dapur" />

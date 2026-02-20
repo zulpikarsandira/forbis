@@ -56,7 +56,7 @@ export function DashboardBarChart({ labels, values }: DashboardBarChartProps) {
                         family: 'Inter',
                         size: 11
                     },
-                    color: '#6B7280'
+                    color: '#9CA3AF'
                 }
             },
             title: {

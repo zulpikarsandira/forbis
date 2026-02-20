@@ -35,7 +35,7 @@ export function SalesTableClient({ data, title, variant, kategori }: SalesTableC
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className={cn(
                     "text-xl font-bold px-4 py-2 rounded-lg border-l-4 shadow-sm inline-block whitespace-nowrap",
-                    variant === 'orange' ? "bg-orange-50 text-orange-700 border-orange-500" : "bg-blue-50 text-blue-700 border-blue-500"
+                    variant === 'orange' ? "bg-orange-500/10 text-orange-600 border-orange-500" : "bg-blue-500/10 text-blue-600 border-blue-500"
                 )}>
                     {title}
                 </h2>
@@ -58,7 +58,7 @@ export function SalesTableClient({ data, title, variant, kategori }: SalesTableC
                             </Button>
                         </DialogTrigger>
                         <DialogContent
-                            className="w-[95vw] sm:max-w-[600px] p-0 rounded-2xl border-0 shadow-2xl overflow-hidden"
+                            className="w-[95vw] sm:max-w-[600px] p-0 rounded-2xl border-border bg-card shadow-2xl overflow-hidden"
                             onInteractOutside={(e) => {
                                 // If we are clicking inside a popover (like product list), don't close the dialog
                                 const isPopover = (e.target as HTMLElement)?.closest('[role="combobox"]') ||
@@ -93,10 +93,10 @@ export function SalesTableClient({ data, title, variant, kategori }: SalesTableC
                 </div>
             </div>
 
-            <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
+            <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <Table className="min-w-[800px]">
-                        <TableHeader className="bg-gray-100/50">
+                        <TableHeader className="bg-muted/50">
                             <TableRow>
                                 <TableHead className="w-[120px] whitespace-nowrap">Tanggal</TableHead>
                                 <TableHead className="whitespace-nowrap">Nama Barang</TableHead>
@@ -114,7 +114,7 @@ export function SalesTableClient({ data, title, variant, kategori }: SalesTableC
                                         <TableCell className="text-gray-500 whitespace-nowrap">{sale.tanggal}</TableCell>
                                         <TableCell className="font-semibold text-gray-900 whitespace-nowrap">{sale.nama}</TableCell>
                                         <TableCell className="text-center">
-                                            <span className="bg-gray-100 px-2 py-1 rounded text-xs font-bold text-gray-600">
+                                            <span className="bg-muted px-2 py-1 rounded text-xs font-bold text-muted-foreground">
                                                 {sale.jumlah}
                                             </span>
                                         </TableCell>

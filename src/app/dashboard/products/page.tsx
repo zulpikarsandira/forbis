@@ -28,7 +28,7 @@ export default async function ProductsPage({
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">Data Barang</h1>
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">Data Barang</h1>
                     <p className="text-muted-foreground">Kelola inventory, harga, dan stok barang.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">

@@ -15,10 +15,10 @@ export default async function UserDashboardPage() {
         <div className="space-y-8">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-2xl font-bold tracking-tight text-gray-900">Statistik Penjualan</h1>
-                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border shadow-sm w-fit">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Statistik Penjualan</h1>
+                <div className="flex items-center gap-2 bg-card px-3 py-1.5 rounded-xl border border-border shadow-sm w-fit">
                     <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span className="text-xs font-semibold text-gray-700">Live Data</span>
+                    <span className="text-xs font-semibold text-muted-foreground">Live Data</span>
                 </div>
             </div>
 
@@ -50,9 +50,9 @@ export default async function UserDashboardPage() {
             </div>
 
             {/* Middle Section: Chart */}
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100">
+            <div className="bg-card rounded-[2.5rem] p-8 shadow-sm border border-border">
                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-bold text-lg text-gray-900">Analisis Penjualan</h3>
+                    <h3 className="font-bold text-lg text-foreground">Analisis Penjualan</h3>
                 </div>
                 <div className="h-[300px] w-full">
                     <DashboardBarChart

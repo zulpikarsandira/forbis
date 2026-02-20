@@ -161,7 +161,7 @@ export default function BackupPage() {
         <div className="space-y-8 max-w-3xl">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-3">
+                <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
                     <Shield className="h-8 w-8 text-primary" />
                     Backup & Restore
                 </h1>
@@ -170,7 +170,10 @@ export default function BackupPage() {
 
             {/* Status Banner */}
             {status && (
-                <div className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium ${status.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                <div className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium ${status.type === 'success'
+                        ? 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20'
+                        : 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+                    }`}>
                     {status.type === 'success' ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <AlertTriangle className="h-4 w-4 shrink-0" />}
                     {status.msg}
                     <button onClick={() => setStatus(null)} className="ml-auto text-xs opacity-60 hover:opacity-100">✕</button>
@@ -178,7 +181,7 @@ export default function BackupPage() {
             )}
 
             {/* Section 1: Manual Backup */}
-            <Card className="rounded-2xl border-0 shadow-sm">
+            <Card className="rounded-2xl border-border bg-card shadow-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
                         <Download className="h-5 w-5 text-blue-600" />
@@ -193,9 +196,9 @@ export default function BackupPage() {
                             { label: 'Entry Penjualan', icon: '🧾' },
                             { label: 'Alokasi Laba', icon: '💰' },
                         ].map(({ label, icon }) => (
-                            <div key={label} className="rounded-xl bg-gray-50 border p-3">
+                            <div key={label} className="rounded-xl bg-muted/50 border border-border p-3">
                                 <div className="text-2xl mb-1">{icon}</div>
-                                <div className="text-xs text-gray-600 font-medium">{label}</div>
+                                <div className="text-xs text-muted-foreground font-medium">{label}</div>
                             </div>
                         ))}
                     </div>
@@ -207,7 +210,7 @@ export default function BackupPage() {
             </Card>
 
             {/* Section 2: Auto Backup */}
-            <Card className="rounded-2xl border-0 shadow-sm">
+            <Card className="rounded-2xl border-border bg-card shadow-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
                         <Clock className="h-5 w-5 text-purple-600" />
@@ -217,7 +220,7 @@ export default function BackupPage() {
                 </CardHeader>
                 <CardContent className="space-y-5">
                     {/* Toggle */}
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 border">
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                         <div>
                             <Label className="font-semibold text-sm">Aktifkan Auto Backup</Label>
                             <p className="text-xs text-muted-foreground mt-0.5">Backup berjalan otomatis sesuai jadwal</p>
@@ -275,7 +278,7 @@ export default function BackupPage() {
                         </div>
 
                         {schedule.enabled && schedule.nextBackup && (
-                            <div className="text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+                            <div className="text-xs text-muted-foreground bg-primary/5 border border-primary/10 rounded-xl px-4 py-3">
                                 ⏰ <strong>Backup berikutnya:</strong>{' '}
                                 {new Date(schedule.nextBackup).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })}
                                 {lastAutoBackup && <><br />✅ <strong>Terakhir:</strong> {lastAutoBackup}</>}
@@ -286,7 +289,7 @@ export default function BackupPage() {
             </Card>
 
             {/* Section 3: Restore */}
-            <Card className="rounded-2xl border-0 shadow-sm border-orange-100">
+            <Card className="rounded-2xl border-border bg-card shadow-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
                         <RotateCcw className="h-5 w-5 text-orange-500" />
@@ -298,24 +301,24 @@ export default function BackupPage() {
                     <input ref={fileInputRef} type="file" accept=".zip" className="hidden" onChange={handleFileUpload} />
 
                     {!restorePreview ? (
-                        <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full gap-2 rounded-xl border-dashed border-2 h-20 text-muted-foreground hover:text-primary hover:border-primary">
+                        <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full gap-2 rounded-xl border-dashed border-2 h-20 text-muted-foreground hover:text-primary hover:border-border hover:bg-muted/30 transition-all">
                             <Upload className="h-5 w-5" />
                             Klik untuk upload file .zip backup
                         </Button>
                     ) : (
                         <div className="space-y-4">
-                            <div className="rounded-xl bg-orange-50 border border-orange-200 p-4">
-                                <p className="text-sm font-semibold text-orange-700 mb-3">📋 Preview File Backup:</p>
+                            <div className="rounded-xl bg-orange-500/10 border border-orange-500/20 p-4">
+                                <p className="text-sm font-semibold text-orange-600 dark:text-orange-400 mb-3">📋 Preview File Backup:</p>
                                 <div className="grid grid-cols-3 gap-3 text-center text-sm">
                                     {[
                                         { label: 'Data Barang', count: restorePreview.barang, icon: '📦' },
                                         { label: 'Entry Penjualan', count: restorePreview.barang_laku, icon: '🧾' },
                                         { label: 'Alokasi Laba', count: restorePreview.alokasi_laba, icon: '💰' },
                                     ].map(({ label, count, icon }) => (
-                                        <div key={label} className="rounded-lg bg-white p-2 border">
+                                        <div key={label} className="rounded-lg bg-card p-2 border border-border">
                                             <div className="text-xl">{icon}</div>
-                                            <div className="font-bold text-lg">{count}</div>
-                                            <div className="text-xs text-gray-500">{label}</div>
+                                            <div className="font-bold text-lg text-foreground">{count}</div>
+                                            <div className="text-xs text-muted-foreground">{label}</div>
                                         </div>
                                     ))}
                                 </div>

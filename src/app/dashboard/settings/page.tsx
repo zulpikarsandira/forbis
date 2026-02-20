@@ -110,8 +110,8 @@ export default function SettingsPage() {
         <div className="max-w-4xl mx-auto space-y-8">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">Pengaturan</h1>
-                    <p className="text-gray-500">Kelola akun admin dan keamanan sistem</p>
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">Pengaturan</h1>
+                    <p className="text-muted-foreground">Kelola akun admin dan keamanan sistem</p>
                 </div>
                 <Button variant="outline" onClick={handleLogout} className="text-red-600 border-red-200 hover:bg-red-50 gap-2">
                     <LogOut className="h-4 w-4" />
@@ -121,7 +121,7 @@ export default function SettingsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Profile Card */}
-                <Card className="shadow-sm border-gray-100 rounded-[2rem]">
+                <Card className="shadow-sm border-border bg-card rounded-[2rem]">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <User className="h-5 w-5 text-primary" />
@@ -130,13 +130,13 @@ export default function SettingsPage() {
                         <CardDescription>Informasi akun Anda saat ini</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex items-center gap-4 p-4 rounded-2xl bg-indigo-50/50">
-                            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg">
+                        <div className="flex items-center gap-4 p-4 rounded-2xl bg-primary/5">
+                            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
                                 {currentUser.email?.[0].toUpperCase()}
                             </div>
                             <div>
-                                <p className="font-bold text-gray-900">{currentUser.email}</p>
-                                <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none">
+                                <p className="font-bold text-foreground">{currentUser.email}</p>
+                                <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20 border-none">
                                     <ShieldCheck className="h-3 w-3 mr-1" />
                                     Aktif
                                 </Badge>
@@ -146,7 +146,7 @@ export default function SettingsPage() {
                 </Card>
 
                 {/* Change Password Card */}
-                <Card className="shadow-sm border-gray-100 rounded-[2rem]">
+                <Card className="shadow-sm border-border bg-card rounded-[2rem]">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Key className="h-5 w-5 text-primary" />
@@ -205,7 +205,7 @@ export default function SettingsPage() {
                 </Card>
 
                 {/* Admin Management (Create New) */}
-                <Card className="md:col-span-2 shadow-sm border-gray-100 rounded-[2rem]">
+                <Card className="md:col-span-2 shadow-sm border-border bg-card rounded-[2rem]">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <UserPlus className="h-5 w-5 text-primary" />
@@ -263,20 +263,22 @@ export default function SettingsPage() {
                         {message && (
                             <div className={cn(
                                 "mt-6 p-4 rounded-xl text-sm font-medium",
-                                message.type === 'success' ? "bg-green-50 text-green-700 border border-green-100" : "bg-red-50 text-red-700 border border-red-100"
+                                message.type === 'success'
+                                    ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20"
+                                    : "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
                             )}>
                                 {message.text}
                             </div>
                         )}
                     </CardContent>
-                    <CardFooter className="bg-gray-50 border-t rounded-b-[2rem] p-6">
+                    <CardFooter className="bg-muted/50 border-t border-border rounded-b-[2rem] p-6">
                         <div className="flex gap-4">
-                            <div className="h-10 w-10 shrink-0 rounded-full bg-white flex items-center justify-center border shadow-sm">
+                            <div className="h-10 w-10 shrink-0 rounded-full bg-card flex items-center justify-center border border-border shadow-sm">
                                 <ShieldCheck className="h-5 w-5 text-indigo-500" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-gray-900">Catatan Keamanan</p>
-                                <p className="text-xs text-gray-500 leading-relaxed">
+                                <p className="text-sm font-bold text-foreground">Catatan Keamanan</p>
+                                <p className="text-xs text-muted-foreground leading-relaxed">
                                     Admin baru akan didaftarkan dengan password yang Anda tentukan. Pastikan admin baru segera merubah password mereka melalui halaman ini setelah login.
                                 </p>
                             </div>
@@ -287,7 +289,7 @@ export default function SettingsPage() {
 
             {/* User Management (Create New User) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <Card className="md:col-span-2 shadow-sm border-gray-100 rounded-[2rem] border-l-4 border-l-cyan-400">
+                <Card className="md:col-span-2 shadow-sm border-border bg-card rounded-[2rem] border-l-4 border-l-cyan-400">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <UserPlus className="h-5 w-5 text-cyan-500" />

@@ -17,15 +17,15 @@ export function DashboardCombinedTable({ lowStockItems, recentSales }: Dashboard
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <h3 className="font-bold text-lg text-gray-900">Stok Menipis & Aktivitas Terakhir</h3>
-                <div className="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto">
+                <h3 className="font-bold text-lg text-foreground">Stok Menipis & Aktivitas Terakhir</h3>
+                <div className="flex bg-muted p-1 rounded-xl w-full sm:w-auto border border-border">
                     <button
                         onClick={() => setActiveTab('low-stock')}
                         className={cn(
                             "flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2",
                             activeTab === 'low-stock'
-                                ? "bg-white text-primary shadow-sm"
-                                : "text-gray-500 hover:text-gray-700"
+                                ? "bg-card text-primary shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         <AlertTriangle className="h-4 w-4" />
@@ -41,8 +41,8 @@ export function DashboardCombinedTable({ lowStockItems, recentSales }: Dashboard
                         className={cn(
                             "flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2",
                             activeTab === 'recent-activity'
-                                ? "bg-white text-primary shadow-sm"
-                                : "text-gray-500 hover:text-gray-700"
+                                ? "bg-card text-primary shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         <History className="h-4 w-4" />
@@ -55,32 +55,32 @@ export function DashboardCombinedTable({ lowStockItems, recentSales }: Dashboard
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[700px]">
                         <thead>
-                            <tr className="border-b border-gray-100 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            <tr className="border-b border-border text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                 <th className="px-8 py-6 whitespace-nowrap">{activeTab === 'low-stock' ? 'Nama Barang' : 'Transaksi'}</th>
                                 <th className="px-6 py-6 whitespace-nowrap">{activeTab === 'low-stock' ? 'Status' : 'Jumlah & Kategori'}</th>
                                 <th className="px-6 py-6 whitespace-nowrap">{activeTab === 'low-stock' ? 'Stok' : 'Waktu'}</th>
                                 <th className="px-6 py-6 text-right">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-border">
                             {activeTab === 'low-stock' ? (
                                 lowStockItems.length > 0 ? (
                                     lowStockItems.map((product) => (
-                                        <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
+                                        <tr key={product.id} className="hover:bg-muted/50 transition-colors">
                                             <td className="px-8 py-5">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500">
+                                                    <div className="h-10 w-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
                                                         <Briefcase className="h-5 w-5" />
                                                     </div>
-                                                    <span className="font-bold text-gray-900">{product.nama}</span>
+                                                    <span className="font-bold text-foreground">{product.nama}</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5">
-                                                <Badge variant="outline" className={`${product.jumlah === 0 ? 'bg-red-50 text-red-600 border-red-200' : 'bg-orange-50 text-orange-600 border-orange-200'} rounded-lg px-3 py-1`}>
+                                                <Badge variant="outline" className={`${product.jumlah === 0 ? 'bg-red-500/10 text-red-600 border-red-500/20' : 'bg-orange-500/10 text-orange-600 border-orange-500/20'} rounded-lg px-3 py-1`}>
                                                     {product.jumlah === 0 ? 'Habis' : 'Stok Menipis'}
                                                 </Badge>
                                             </td>
-                                            <td className="px-6 py-5 text-gray-900 font-bold whitespace-nowrap">{product.jumlah} pcs</td>
+                                            <td className="px-6 py-5 text-foreground font-bold whitespace-nowrap">{product.jumlah} pcs</td>
                                             <td className="px-6 py-5 text-right">
                                                 <Link href="/dashboard/products" className="text-gray-400 hover:text-indigo-600 font-medium text-sm whitespace-nowrap">
                                                     Update Stok
@@ -98,25 +98,25 @@ export function DashboardCombinedTable({ lowStockItems, recentSales }: Dashboard
                             ) : (
                                 recentSales.length > 0 ? (
                                     recentSales.map((sale) => (
-                                        <tr key={sale.id} className="hover:bg-gray-50/50 transition-colors">
+                                        <tr key={sale.id} className="hover:bg-muted/50 transition-colors">
                                             <td className="px-8 py-5">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-primary">
+                                                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                                                         <ShoppingCart className="h-5 w-5" />
                                                     </div>
                                                     <div className="flex flex-col">
-                                                        <span className="font-bold text-gray-900 whitespace-nowrap">{sale.nama}</span>
-                                                        <span className="text-xs text-gray-500">#{sale.id}</span>
+                                                        <span className="font-bold text-foreground whitespace-nowrap">{sale.nama}</span>
+                                                        <span className="text-xs text-muted-foreground">#{sale.id}</span>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5">
                                                 <div className="flex flex-col">
-                                                    <span className="text-sm font-bold text-gray-900 whitespace-nowrap">{sale.jumlah} items</span>
-                                                    <span className="text-xs text-gray-500">{sale.kategori}</span>
+                                                    <span className="text-sm font-bold text-foreground whitespace-nowrap">{sale.jumlah} items</span>
+                                                    <span className="text-xs text-muted-foreground">{sale.kategori}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-5 text-gray-900 font-medium text-sm whitespace-nowrap">
+                                            <td className="px-6 py-5 text-foreground font-medium text-sm whitespace-nowrap">
                                                 {new Date(sale.created_at || sale.tanggal).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                                             </td>
                                             <td className="px-6 py-5 text-right">

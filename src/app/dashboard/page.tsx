@@ -29,7 +29,7 @@ export default async function DashboardPage() {
     return (
         <div className="space-y-8">
             {/* Banner Section */}
-            <div className="w-full relative rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 group h-[180px] md:h-[280px]">
+            <div className="w-full relative rounded-[2rem] overflow-hidden shadow-sm border border-border group h-[180px] md:h-[280px]">
                 <Image
                     src="/images/dashboard aplikasi forbis umkm cimanggung (1350 x 1080 px) (1500 x 1000 px).png"
                     alt="Dashboard Aplikasi Penjualan Forbis UMKM Cimanggung"
@@ -41,10 +41,10 @@ export default async function DashboardPage() {
 
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-2xl font-bold tracking-tight text-gray-900">Statistik Penjualan</h1>
-                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border shadow-sm w-fit">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Statistik Penjualan</h1>
+                <div className="flex items-center gap-2 bg-card px-3 py-1.5 rounded-xl border border-border shadow-sm w-fit">
                     <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span className="text-xs font-semibold text-gray-700">Live Data</span>
+                    <span className="text-xs font-semibold text-muted-foreground">Live Data</span>
                 </div>
             </div>
 
@@ -76,9 +76,9 @@ export default async function DashboardPage() {
             </div>
 
             {/* Middle Section: Chart */}
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100">
+            <div className="bg-card rounded-[2.5rem] p-8 shadow-sm border border-border">
                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-bold text-lg text-gray-900">Analisis Penjualan</h3>
+                    <h3 className="font-bold text-lg text-foreground">Analisis Penjualan</h3>
                 </div>
                 <div className="h-[300px] w-full">
                     <DashboardBarChart
