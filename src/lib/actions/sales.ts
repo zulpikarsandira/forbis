@@ -88,13 +88,15 @@ export async function getTodaySales() {
     return { data: active, today };
 }
 
-// Get list of unique dates that have sales data (any date, including today)
+// Get list of unique dates that have sales data (excluding today)
 export async function getHistoryDates() {
     const supabase = await createSupabaseServerClient();
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
 
     const { data, error } = await supabase
         .from('barang_laku')
         .select('tanggal, is_deleted')
+        .neq('tanggal', today) // Exclude today - today belongs to "Entry Hari Ini"
         .order('tanggal', { ascending: false });
 
     if (error) return { dates: [] };

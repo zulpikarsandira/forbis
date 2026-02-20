@@ -23,7 +23,7 @@ export function SalesForm({ defaultKategori, onSuccess }: SalesFormProps) {
     const [jumlah, setJumlah] = useState(1);
     const [hargaJual, setHargaJual] = useState(0);
     const [hargaBeli, setHargaBeli] = useState(0);
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [date, setDate] = useState(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date()));
     const [kategori, setKategori] = useState<'Dapur' | 'Warung'>(defaultKategori || 'Warung');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);

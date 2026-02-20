@@ -19,7 +19,7 @@ import {
     FileSpreadsheet,
     FileText,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { softDeleteHistorySale, restoreHistorySale, hardDeleteHistorySale, getSalesByDate, getHistoryDates, type Sale } from '@/lib/actions/sales';
 import ExcelJS from 'exceljs';
@@ -145,7 +145,8 @@ async function exportPDFForKategori(data: Sale[], kategori: string, date: string
 }
 
 export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
-    const [date, setDate] = useState<Date>(new Date());
+    // Default to yesterday — today's data belongs in "Entry Hari Ini"
+    const [date, setDate] = useState<Date>(subDays(new Date(), 1));
     const [fetchedSales, setFetchedSales] = useState<ExtendedSale[]>([]);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
