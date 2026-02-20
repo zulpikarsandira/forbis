@@ -22,6 +22,7 @@ export function SalesForm({ defaultKategori, onSuccess }: SalesFormProps) {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [jumlah, setJumlah] = useState(1);
     const [hargaJual, setHargaJual] = useState(0);
+    const [hargaBeli, setHargaBeli] = useState(0);
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [kategori, setKategori] = useState<'Dapur' | 'Warung'>(defaultKategori || 'Warung');
     const [loading, setLoading] = useState(false);
@@ -31,6 +32,7 @@ export function SalesForm({ defaultKategori, onSuccess }: SalesFormProps) {
     const handleProductSelect = (product: Product) => {
         setSelectedProduct(product);
         setHargaJual(product.harga);
+        setHargaBeli(product.modal);
         setJumlah(1);
         setError(null);
     };
@@ -51,7 +53,7 @@ export function SalesForm({ defaultKategori, onSuccess }: SalesFormProps) {
         formData.append('jumlah', jumlah.toString());
         formData.append('harga_jual', hargaJual.toString());
         formData.append('tanggal', date);
-        formData.append('modal_per_item', selectedProduct.modal.toString());
+        formData.append('modal_per_item', hargaBeli.toString());
         formData.append('kategori', kategori);
 
         const result = await createSale(formData);
@@ -141,7 +143,17 @@ export function SalesForm({ defaultKategori, onSuccess }: SalesFormProps) {
                             </div>
 
                             <div className="w-full md:w-32 space-y-2">
-                                <Label>Harga Satuan</Label>
+                                <Label>Harga Beli</Label>
+                                <Input
+                                    type="text"
+                                    value={formatIDR(hargaBeli)}
+                                    onChange={(e) => setHargaBeli(parseIDR(e.target.value))}
+                                    className="text-right font-mono text-orange-600"
+                                />
+                            </div>
+
+                            <div className="w-full md:w-32 space-y-2">
+                                <Label>Harga Jual</Label>
                                 <Input
                                     type="text"
                                     value={formatIDR(hargaJual)}
@@ -150,7 +162,7 @@ export function SalesForm({ defaultKategori, onSuccess }: SalesFormProps) {
                                 />
                             </div>
 
-                            <div className="w-full md:w-24 space-y-2">
+                            <div className="w-full md:w-20 space-y-2">
                                 <Label>Jumlah</Label>
                                 <Input
                                     type="number"
@@ -158,7 +170,7 @@ export function SalesForm({ defaultKategori, onSuccess }: SalesFormProps) {
                                     onChange={(e) => setJumlah(Number(e.target.value))}
                                     min="1"
                                     max={selectedProduct.jumlah}
-                                    className="text-center font-bold"
+                                    className="text-center font-bold px-1"
                                 />
                             </div>
                         </div>
