@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 import { getDashboardStats } from '@/lib/actions/dashboard';
 import { PurpleStatCard } from '@/components/dashboard/purple-stat-card';
@@ -27,6 +28,19 @@ export default async function DashboardPage() {
 
     return (
         <div className="space-y-8">
+            {/* Banner Section */}
+            <div className="w-full relative rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 group">
+                <div className="w-full relative" style={{ aspectRatio: '1500/1000' }}>
+                    <Image
+                        src="/images/dashboard aplikasi forbis umkm cimanggung (1350 x 1080 px) (1500 x 1000 px).png"
+                        alt="Dashboard Aplikasi Penjualan Forbis UMKM Cimanggung"
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        priority
+                    />
+                </div>
+            </div>
+
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-2xl font-bold tracking-tight text-gray-900">Statistik Penjualan</h1>
