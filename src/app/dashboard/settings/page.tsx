@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Loader2, UserPlus, Key, Save, User, ShieldCheck, Mail, LogOut, Eye, EyeOff } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { createUserAccount } from '@/lib/actions/auth';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -68,22 +69,10 @@ export default function SettingsPage() {
         e.preventDefault();
         setLoading(true);
         setMessage(null);
-
-        // Note: Sign up will create a user but might auto-login or trigger verification.
-        // For admin management without service role, we use signUp.
         try {
-            const { error } = await supabase.auth.signUp({
-                email,
-                password,
-                options: {
-                    data: {
-                        role: 'admin',
-                    }
-                }
-            });
-
-            if (error) throw error;
-            setMessage({ type: 'success', text: `Berhasil mendaftarkan admin ${email}. Silakan cek email untuk verifikasi jika diaktifkan di Supabase.` });
+            const result = await createUserAccount(email, password, 'admin');
+            if (result.error) throw new Error(result.error);
+            setMessage({ type: 'success', text: `Berhasil mendaftarkan admin ${email}. Akun langsung aktif tanpa verifikasi email.` });
             setEmail('');
             setPassword('');
         } catch (err: any) {
@@ -98,13 +87,9 @@ export default function SettingsPage() {
         setLoading(true);
         setMessage(null);
         try {
-            const { error } = await supabase.auth.signUp({
-                email: userEmail,
-                password: userPassword,
-                options: { data: { role: 'user' } }
-            });
-            if (error) throw error;
-            setMessage({ type: 'success', text: `Berhasil mendaftarkan user ${userEmail}. Silakan cek email untuk verifikasi jika diaktifkan di Supabase.` });
+            const result = await createUserAccount(userEmail, userPassword, 'user');
+            if (result.error) throw new Error(result.error);
+            setMessage({ type: 'success', text: `Berhasil mendaftarkan user ${userEmail}. Akun langsung aktif, user bisa login sekarang.` });
             setUserEmail('');
             setUserPassword('');
         } catch (err: any) {
