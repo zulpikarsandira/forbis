@@ -94,116 +94,132 @@ export function ProductForm({ product, open: controlledOpen, onOpenChange: contr
                     </Button>
                 </DialogTrigger>
             )}
-            <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                    <DialogTitle>{product ? 'Edit Barang' : 'Tambah Barang Baru'}</DialogTitle>
-                    <DialogDescription>
-                        Isi form berikut untuk {product ? 'mengubah data' : 'menambahkan'} barang ke inventory.
-                    </DialogDescription>
-                </DialogHeader>
+            <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden border-border bg-card shadow-2xl rounded-3xl">
+                <div className="h-2 w-full bg-primary" />
+                <div className="p-6">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-bold text-foreground">
+                            {product ? 'Edit Barang' : 'Tambah Barang Baru'}
+                        </DialogTitle>
+                        <DialogDescription className="text-muted-foreground">
+                            {product ? 'Update informasi barang di database.' : 'Masukkan detail barang untuk menambah stok baru.'}
+                        </DialogDescription>
+                    </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="kode">Kode Barang</Label>
-                            <Input
-                                id="kode"
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="nama"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-foreground font-semibold">Nama Barang</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Contoh: Basreng Original" {...field} className="bg-muted/50 border-border focus:ring-primary/20 rounded-xl" />
+                                            </FormControl>
+                                            <FormMessage className="text-xs" />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="jenis"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-foreground font-semibold">Kategori/Jenis</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Contoh: Snack" {...field} className="bg-muted/50 border-border focus:ring-primary/20 rounded-xl" />
+                                            </FormControl>
+                                            <FormMessage className="text-xs" />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <FormField
+                                control={form.control}
                                 name="kode"
-                                placeholder="BRG-001"
-                                required
-                                defaultValue={product?.kode}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-foreground font-semibold">Kode Barang</FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <Input {...field} className="bg-muted/50 border-border focus:ring-primary/20 rounded-xl font-mono" />
+                                                {product && (
+                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border uppercase">Read Only</div>
+                                                )}
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage className="text-xs" />
+                                    </FormItem>
+                                )}
                             />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="jenis">Jenis / Kategori</Label>
-                            <Input
-                                id="jenis"
-                                name="jenis"
-                                placeholder="Makanan"
-                                defaultValue={product?.jenis || ''}
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="modal"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-foreground font-semibold">Harga Modal</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" {...field} className="bg-muted/50 border-border focus:ring-primary/20 rounded-xl" onChange={e => field.onChange(Number(e.target.value))} />
+                                            </FormControl>
+                                            <FormMessage className="text-xs" />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="harga"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-foreground font-semibold">Harga Jual</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" {...field} className="bg-muted/50 border-border focus:ring-primary/20 rounded-xl" onChange={e => field.onChange(Number(e.target.value))} />
+                                            </FormControl>
+                                            <FormMessage className="text-xs" />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <FormField
+                                control={form.control}
+                                name="jumlah"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-foreground font-semibold">Stok Saat Ini</FormLabel>
+                                        <FormControl>
+                                            <Input type="number" {...field} className="bg-muted/50 border-border focus:ring-primary/20 rounded-xl" onChange={e => field.onChange(Number(e.target.value))} />
+                                        </FormControl>
+                                        <FormMessage className="text-xs" />
+                                    </FormItem>
+                                )}
                             />
-                        </div>
-                    </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="nama">Nama Barang</Label>
-                        <Input
-                            id="nama"
-                            name="nama"
-                            placeholder="Contoh: Kopi Kapal Api"
-                            required
-                            defaultValue={product?.nama}
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="suplier">Suplier</Label>
-                        <Input
-                            id="suplier"
-                            name="suplier"
-                            placeholder="CV. Maju Jaya"
-                            defaultValue={product?.suplier || ''}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="modal">Harga Modal</Label>
-                            <Input
-                                id="modal"
-                                type="text"
-                                placeholder="Rp 0"
-                                required
-                                value={formatIDR(modal)}
-                                onChange={(e) => setModal(parseIDR(e.target.value))}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="harga">Harga Jual</Label>
-                            <Input
-                                id="harga"
-                                type="text"
-                                placeholder="Rp 0"
-                                required
-                                value={formatIDR(harga)}
-                                onChange={(e) => setHarga(parseIDR(e.target.value))}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="jumlah">Stok Awal</Label>
-                        <Input
-                            id="jumlah"
-                            name="jumlah"
-                            type="number"
-                            placeholder="0"
-                            required
-                            min="0"
-                            defaultValue={product?.jumlah}
-                        />
-                    </div>
-
-                    {error && (
-                        <div className="text-red-500 text-sm bg-red-50 p-2 rounded-lg text-center animate-in shake">
-                            {error}
-                        </div>
-                    )}
-
-                    {success && (
-                        <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-xl flex items-center justify-center gap-2 animate-in fade-in zoom-in-95 duration-300">
-                            <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
-                            <span className="font-semibold text-sm">Berhasil menyimpan barang! Jendela akan tertutup...</span>
-                        </div>
-                    )}
-
-                    <DialogFooter>
-                        <Button type="submit" disabled={loading} className="w-full bg-gradient-primary text-white border-0">
-                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {product ? 'Simpan Perubahan' : 'Simpan Barang'}
-                        </Button>
-                    </DialogFooter>
-                </form>
+                            <div className="flex gap-3 pt-4">
+                                <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1 rounded-xl h-12 border-border text-muted-foreground hover:bg-muted hover:text-foreground">
+                                    Batal
+                                </Button>
+                                <Button type="submit" disabled={isSubmitting} className="flex-1 rounded-xl h-12 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
+                                    {isSubmitting ? (
+                                        <span className="flex items-center gap-2">
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Menyimpan...
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center gap-2">
+                                            <Save className="h-4 w-4" />
+                                            {product ? 'Update Barang' : 'Simpan Barang'}
+                                        </span>
+                                    )}
+                                </Button>
+                            </div>
+                        </form>
+                    </Form>
+                </div>
             </DialogContent>
         </Dialog>
     );

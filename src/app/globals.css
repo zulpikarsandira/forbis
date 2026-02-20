@@ -29,69 +29,49 @@
 
 @layer base {
   :root {
-    --background: hsl(220 14% 96%);
-    /* Light Grayish Blue Background */
-    --foreground: hsl(222.2 84% 4.9%);
-
-    --card: hsl(0 0% 100%);
-    --card-foreground: hsl(222.2 84% 4.9%);
-
-    --popover: hsl(0 0% 100%);
-    --popover-foreground: hsl(222.2 84% 4.9%);
-
-    /* Indigo/Purple Primary */
-    --primary: hsl(243 75% 59%);
-    /* #4F46E5 */
-    --primary-foreground: hsl(210 40% 98%);
-
-    --secondary: hsl(210 40% 96.1%);
-    --secondary-foreground: hsl(222.2 47.4% 11.2%);
-
-    --muted: hsl(210 40% 96.1%);
-    --muted-foreground: hsl(215.4 16.3% 46.9%);
-
-    --accent: hsl(210 40% 96.1%);
-    --accent-foreground: hsl(222.2 47.4% 11.2%);
-
-    --destructive: hsl(0 84.2% 60.2%);
-    --destructive-foreground: hsl(210 40% 98%);
-
-    --border: hsl(214.3 31.8% 91.4%);
-    --input: hsl(214.3 31.8% 91.4%);
-    --ring: hsl(243 75% 59%);
-
-    --radius: 1rem;
-    /* More rounded */
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.585 0.233 255.43);
+    /* Consistent Blue/Indigo */
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.585 0.233 255.43);
+    --radius: 0.625rem;
   }
 
   .dark {
-    --background: hsl(222.2 84% 4.9%);
-    --foreground: hsl(210 40% 98%);
-
-    --card: hsl(222.2 84% 4.9%);
-    --card-foreground: hsl(210 40% 98%);
-
-    --popover: hsl(222.2 84% 4.9%);
-    --popover-foreground: hsl(210 40% 98%);
-
-    --primary: hsl(243 75% 59%);
-    --primary-foreground: hsl(222.2 47.4% 11.2%);
-
-    --secondary: hsl(217.2 32.6% 17.5%);
-    --secondary-foreground: hsl(210 40% 98%);
-
-    --muted: hsl(217.2 32.6% 17.5%);
-    --muted-foreground: hsl(215 20.2% 65.1%);
-
-    --accent: hsl(217.2 32.6% 17.5%);
-    --accent-foreground: hsl(210 40% 98%);
-
-    --destructive: hsl(0 62.8% 30.6%);
-    --destructive-foreground: hsl(210 40% 98%);
-
-    --border: hsl(217.2 32.6% 17.5%);
-    --input: hsl(217.2 32.6% 17.5%);
-    --ring: hsl(243 75% 59%);
+    --background: oklch(0.25 0 0);
+    /* Abu Tua */
+    --foreground: oklch(0.95 0 0);
+    --card: oklch(0.28 0 0);
+    --card-foreground: oklch(0.95 0 0);
+    --popover: oklch(0.28 0 0);
+    --popover-foreground: oklch(0.95 0 0);
+    --primary: oklch(0.585 0.233 255.43);
+    /* Maintain Blue in Dark Mode */
+    --primary-foreground: oklch(1 0 0);
+    --secondary: oklch(0.35 0 0);
+    --secondary-foreground: oklch(0.95 0 0);
+    --muted: oklch(0.35 0 0);
+    --muted-foreground: oklch(0.7 0 0);
+    --accent: oklch(0.35 0 0);
+    --accent-foreground: oklch(0.95 0 0);
+    --destructive: oklch(0.6 0.2 25);
+    --border: oklch(1 0 0 / 15%);
+    --input: oklch(1 0 0 / 20%);
+    --ring: oklch(0.585 0.233 255.43);
   }
 
   * {
@@ -130,32 +110,32 @@
   background: linear-gradient(135deg, #F87171 0%, #EF4444 100%);
 }
 
-/* Badge Updates */
+/* Badge Updates - Normalized for Dark Mode */
 .badge-stock-safe {
-  background: #ECFDF5;
-  color: #059669;
+  background: color-mix(in oklch, oklch(0.85 0.15 150), transparent 90%);
+  color: oklch(0.5 0.2 150);
   font-weight: 600;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
-  border: 1px solid #A7F3D0;
+  border: 1px solid color-mix(in oklch, oklch(0.5 0.2 150), transparent 80%);
 }
 
 .badge-stock-warning {
-  background: #FFFBEB;
-  color: #D97706;
+  background: color-mix(in oklch, oklch(0.85 0.15 70), transparent 90%);
+  color: oklch(0.6 0.2 70);
   font-weight: 600;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
-  border: 1px solid #FDE68A;
+  border: 1px solid color-mix(in oklch, oklch(0.6 0.2 70), transparent 80%);
 }
 
 .badge-stock-danger {
-  background: #FEF2F2;
-  color: #DC2626;
+  background: color-mix(in oklch, oklch(0.6 0.2 25), transparent 90%);
+  color: oklch(0.6 0.2 25);
   font-weight: 600;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
-  border: 1px solid #FECACA;
+  border: 1px solid color-mix(in oklch, oklch(0.6 0.2 25), transparent 80%);
 }
 
 /* Glassmorphism - Updated */
@@ -218,70 +198,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-:root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.25 0 0);
-  /* Abu Tua */
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.28 0 0);
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.28 0 0);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.9 0 0);
-  --primary-foreground: oklch(0.2 0 0);
-  --secondary: oklch(0.35 0 0);
-  --secondary-foreground: oklch(0.95 0 0);
-  --muted: oklch(0.35 0 0);
-  --muted-foreground: oklch(0.7 0 0);
-  --accent: oklch(0.35 0 0);
-  --accent-foreground: oklch(0.95 0 0);
-  --destructive: oklch(0.6 0.2 25);
-  --border: oklch(1 0 0 / 15%);
-  --input: oklch(1 0 0 / 20%);
-  --ring: oklch(0.6 0 0);
-  --sidebar: oklch(0.22 0 0);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.5 0.2 260);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.3 0 0);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(1 0 0 / 15%);
-  --sidebar-ring: oklch(0.6 0 0);
-}
+/* Secondary redundant block removed */
 
 /* Custom Theme Switch from Uiverse.io */
 .theme-switch {

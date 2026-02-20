@@ -10,7 +10,7 @@ interface PurpleStatCardProps {
 
 export function PurpleStatCard({ title, value, subtitle, className }: PurpleStatCardProps) {
     return (
-        <div className={cn("relative overflow-hidden rounded-[2rem] bg-gradient-primary p-6 text-white shadow-lg shadow-indigo-200", className)}>
+        <div className={cn("relative overflow-hidden rounded-[2rem] bg-gradient-primary p-6 text-white shadow-lg", className)}>
             {/* Decorative Circles */}
             <div className="absolute -right-4 -top-4 h-32 w-32 rounded-full border-[1.5rem] border-white/10" />
             <div className="absolute -bottom-8 right-10 h-32 w-32 rounded-full border-[1.5rem] border-white/10" />
@@ -37,7 +37,7 @@ export function PurpleStatCard({ title, value, subtitle, className }: PurpleStat
                         </svg>
                     </div>
                     <div className="flex items-center gap-1 text-xs font-medium bg-white/20 px-2 py-1 rounded-lg backdrop-blur-sm">
-                        See details <ArrowUpRight className="h-3 w-3" />
+                        <ArrowUpRight className="h-5 w-5 text-muted-foreground/30 shrink-0" />
                     </div>
                 </div>
 

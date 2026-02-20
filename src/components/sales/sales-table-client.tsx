@@ -49,10 +49,7 @@ export function SalesTableClient({ data, title, variant, kategori }: SalesTableC
 
                     <Dialog open={open} onOpenChange={setOpen}>
                         <DialogTrigger asChild>
-                            <Button className={cn(
-                                "gap-2 shadow-md hover:scale-105 transition-transform flex-1 sm:flex-none",
-                                variant === 'orange' ? "bg-orange-500 hover:bg-orange-600" : "bg-blue-600 hover:bg-blue-700"
-                            )}>
+                            <Button className="gap-2 shadow-md hover:scale-105 transition-transform flex-1 sm:flex-none bg-primary hover:bg-primary/90">
                                 <Plus className="h-4 w-4" />
                                 <span className="whitespace-nowrap">Entry {title.split(' ')[1]}</span>
                             </Button>
@@ -74,10 +71,7 @@ export function SalesTableClient({ data, title, variant, kategori }: SalesTableC
                                     Input data transaksi untuk kategori {kategori}.
                                 </DialogDescription>
                             </DialogHeader>
-                            <div className={cn(
-                                "h-2 w-full rounded-t-2xl",
-                                variant === 'orange' ? "bg-orange-500" : "bg-blue-600"
-                            )} />
+                            <div className="h-2 w-full rounded-t-2xl bg-primary" />
                             <div className="p-4 sm:p-6 max-h-[85vh] overflow-y-auto">
                                 <SalesForm
                                     defaultKategori={kategori}
@@ -110,18 +104,18 @@ export function SalesTableClient({ data, title, variant, kategori }: SalesTableC
                         <TableBody>
                             {data.length > 0 ? (
                                 data.map((sale) => (
-                                    <TableRow key={sale.id} className="group hover:bg-gray-50/50">
-                                        <TableCell className="text-gray-500 whitespace-nowrap">{sale.tanggal}</TableCell>
-                                        <TableCell className="font-semibold text-gray-900 whitespace-nowrap">{sale.nama}</TableCell>
+                                    <TableRow key={sale.id} className="group hover:bg-muted/50 transition-colors">
+                                        <TableCell className="text-muted-foreground whitespace-nowrap">{sale.tanggal}</TableCell>
+                                        <TableCell className="font-semibold text-foreground whitespace-nowrap">{sale.nama}</TableCell>
                                         <TableCell className="text-center">
                                             <span className="bg-muted px-2 py-1 rounded text-xs font-bold text-muted-foreground">
                                                 {sale.jumlah}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="text-right font-mono font-bold whitespace-nowrap">
+                                        <TableCell className="text-right font-mono font-bold text-foreground whitespace-nowrap">
                                             {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(sale.total_harga)}
                                         </TableCell>
-                                        <TableCell className="text-right text-green-600 font-medium font-mono whitespace-nowrap">
+                                        <TableCell className="text-right text-emerald-500 font-medium font-mono whitespace-nowrap">
                                             +{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(sale.laba)}
                                         </TableCell>
                                         <TableCell className="text-center">

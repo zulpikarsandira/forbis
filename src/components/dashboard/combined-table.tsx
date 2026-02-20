@@ -51,7 +51,7 @@ export function DashboardCombinedTable({ lowStockItems, recentSales }: Dashboard
                 </div>
             </div>
 
-            <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-card rounded-[2rem] shadow-sm border border-border overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[700px]">
                         <thead>
@@ -82,7 +82,7 @@ export function DashboardCombinedTable({ lowStockItems, recentSales }: Dashboard
                                             </td>
                                             <td className="px-6 py-5 text-foreground font-bold whitespace-nowrap">{product.jumlah} pcs</td>
                                             <td className="px-6 py-5 text-right">
-                                                <Link href="/dashboard/products" className="text-gray-400 hover:text-indigo-600 font-medium text-sm whitespace-nowrap">
+                                                <Link href="/dashboard/products" className="text-muted-foreground hover:text-primary font-medium text-sm whitespace-nowrap">
                                                     Update Stok
                                                 </Link>
                                             </td>
@@ -120,7 +120,7 @@ export function DashboardCombinedTable({ lowStockItems, recentSales }: Dashboard
                                                 {new Date(sale.created_at || sale.tanggal).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                                             </td>
                                             <td className="px-6 py-5 text-right">
-                                                <Link href="/dashboard/sales" className="text-gray-400 hover:text-indigo-600 font-medium text-sm whitespace-nowrap">
+                                                <Link href="/dashboard/sales" className="text-muted-foreground hover:text-primary font-medium text-sm whitespace-nowrap">
                                                     Lihat Detail
                                                 </Link>
                                             </td>

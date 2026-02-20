@@ -103,7 +103,7 @@ export default function SalesPage() {
                 {/* Today Tab */}
                 <TabsContent value="today" className="space-y-12 mt-6">
                     {today && (
-                        <p className="text-sm text-muted-foreground -mb-8">
+                        <p className="text-sm text-muted-foreground mb-4">
                             Menampilkan data hari ini: <strong className="text-foreground">{today}</strong>
                         </p>
                     )}
