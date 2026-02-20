@@ -10,7 +10,6 @@ import { format } from "date-fns"
 import { id } from "date-fns/locale"
 import { applyExcelHeader, applyPDFHeader, getLogoBase64 } from "@/lib/export-utils"
 import { type Sale } from "@/lib/actions/sales"
-import { generatePdfWithCanvas, type PDFInvoiceData } from "@/lib/pdf-canvas-utils"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -155,46 +154,6 @@ export function BulkDownloadInvoiceButton({
             setLoading(false)
         }
     }
-
-    const exportPDFWithCanvas = async () => {
-        setLoading(true)
-        try {
-            const invoiceNo = `INV-${Date.now().toString().slice(-6)}`
-            const totalSum = sales.reduce((acc, sale) => acc + sale.total_harga, 0)
-
-            const data: PDFInvoiceData = {
-                invoiceNo: invoiceNo,
-                date: format(new Date(), 'dd MMMM yyyy', { locale: id }),
-                customerName: `Pelanggan ${kategori}`, // Default name
-                customerAddress: 'Cimanggung, Sumedang',
-                items: sales.map(s => ({
-                    description: s.nama,
-                    qty: s.jumlah,
-                    price: s.total_harga / s.jumlah,
-                    total: s.total_harga
-                })),
-                totalSum: totalSum
-            }
-
-            const pdfBytes = await generatePdfWithCanvas(
-                '/images/Blue Modern Creative Professional Company Invoice (1).pdf',
-                data
-            )
-
-            const blob = new Blob([pdfBytes as any], { type: 'application/pdf' })
-            const url = window.URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url
-            a.download = `Invoice_Canvas_${kategori}_${format(new Date(), 'yyyy-MM-dd')}.pdf`
-            a.click()
-            window.URL.revokeObjectURL(url)
-        } catch (error) {
-            console.error('PDF Template Export Error:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
-
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -220,11 +179,7 @@ export function BulkDownloadInvoiceButton({
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={exportPDF} className="gap-2 cursor-pointer font-medium hover:bg-red-50 hover:text-red-700 transition-colors">
                     <FileText className="h-4 w-4 text-red-600" />
-                    Export PDF (Standard)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={exportPDFWithCanvas} className="gap-2 cursor-pointer font-medium hover:bg-blue-50 hover:text-blue-700 transition-colors">
-                    <FileText className="h-4 w-4 text-blue-600" />
-                    Export PDF (Template Canvas)
+                    Export PDF
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
