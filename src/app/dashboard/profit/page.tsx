@@ -128,12 +128,36 @@ export default function ProfitPage() {
 
             const logoBase64 = await getLogoBase64();
 
+            const columns = [
+                { header: 'NO', key: 'no', width: 5 },
+                { header: 'Tgl', key: 'tgl', width: 12 },
+                { header: 'NO. FAKTUR', key: 'faktur', width: 15 },
+                { header: 'NAMA BARANG', key: 'nama', width: 25 },
+                { header: 'BANYAK', key: 'banyak', width: 10 },
+                { header: 'SATUAN', key: 'satuan', width: 10 },
+                { header: 'HARGA SUPLIER', key: 'h_suplier', width: 15 },
+                { header: 'JUMLAH', key: 'j_modal', width: 15 },
+                { header: 'HARGA KOPERASI', key: 'h_kop', width: 15 },
+                { header: 'JUMLAH', key: 'j_jual', width: 15 },
+                { header: 'PROFIT', key: 'profit', width: 15 },
+                { header: 'ZAKAT', key: 'zakat', width: 15 },
+                { header: 'SISA', key: 'sisa', width: 15 },
+                { header: 'SPJG', key: 'spjg', width: 15 },
+                { header: 'CASHBACK DAPUR', key: 'cashback', width: 15 },
+                { header: 'KOP. FORBIS', key: 'kop_forbis', width: 15 },
+                { header: 'OPERASIONAL', key: 'ops', width: 15 },
+                { header: 'SHU', key: 'shu', width: 15 },
+                { header: 'PEKERJA 1', key: 'p1', width: 12 },
+                { header: 'PEKERJA 2', key: 'p2', width: 12 },
+                { header: 'PEKERJA 3', key: 'p3', width: 12 },
+                { header: 'PEKERJA 4', key: 'p4', width: 12 },
+                { header: 'DLL', key: 'dll', width: 12 },
+            ];
+
             // --- 0. Apply Official Header ---
-            const startRowTable = applyExcelHeader(workbook, worksheet, `Laporan Pembagian Laba ${activeTab} - ${periodeName}`, 'V', logoBase64);
+            const startRowTable = applyExcelHeader(workbook, worksheet, `Laporan Pembagian Laba ${activeTab} - ${periodeName}`, columns, logoBase64);
 
             // --- 1. Define Columns & Headers ---
-            // Row 1: Merged Headers
-            // ...
             // Setting up Header Row at startRowTable
             worksheet.getCell(`A${startRowTable}`).value = "NO";
             worksheet.getCell(`B${startRowTable}`).value = "Tgl";

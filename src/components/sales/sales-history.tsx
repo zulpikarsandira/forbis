@@ -1,21 +1,27 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { getSalesByDate, getHistoryDates, deleteHistorySale, restoreHistorySale, type Sale } from '@/lib/actions/sales';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useState, useMemo } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileDown, History, ChevronDown, ReceiptText, Loader2, FileSpreadsheet, FileText, Trash2, RotateCcw, ChevronUp, XCircle } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { cn } from '@/lib/utils';
+    CalendarIcon,
+    Search,
+    ChevronLeft,
+    ChevronRight,
+    FileDown,
+    Trash2,
+    RefreshCcw,
+    FileSpreadsheet,
+    FileText,
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
+import { deleteHistorySale, restoreHistorySale } from '@/lib/actions/sales';
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -28,64 +34,75 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { DayPicker } from 'react-day-picker';
-import 'react-day-picker/dist/style.css';
 
-const formatRupiah = (n: number) =>
-    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
+// Types
+interface Sale {
+    id: number;
+    tanggal: string;
+    nama: string;
+    total_harga: number;
+    jumlah: number;
+    laba: number;
+    kategori: 'Dapur' | 'Warung';
+    created_at: string;
+    is_deleted?: boolean;
+}
 
-const toLocalDate = (dateStr: string) => {
-    const [y, m, d] = dateStr.split('-').map(Number);
-    return new Date(y, m - 1, d);
-};
-
-// ── Export utilities ─────────────────────────────────────────────────────────
+interface SalesHistoryProps {
+    sales: Sale[];
+}
 
 async function exportExcelForKategori(data: Sale[], kategori: string, date: string, variant: 'orange' | 'blue') {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet(`Laporan ${kategori}`);
     const logoBase64 = await getLogoBase64();
 
-    const startRow = applyExcelHeader(workbook, worksheet, `Laporan Penjualan`, 'F', logoBase64);
+    const columns = [
+        { header: 'No', key: 'no', width: 5 },
+        { header: 'Waktu', key: 'waktu', width: 10 },
+        { header: 'Nama Pelanggan', key: 'pelanggan', width: 25 },
+        { header: 'Total Belanja', key: 'total', width: 20 },
+        { header: 'Kategori', key: 'kategori', width: 15 },
+        { header: 'ID Transaksi', key: 'id', width: 15 },
+    ];
+
+    const startRow = applyExcelHeader(workbook, worksheet, `Laporan Penjualan`, columns, logoBase64);
 
     const headerRow = worksheet.getRow(startRow);
     headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     headerRow.fill = {
-        type: 'pattern', pattern: 'solid',
+        type: 'pattern',
+        pattern: 'solid',
         fgColor: { argb: variant === 'orange' ? 'FFF97316' : 'FF2563EB' }
     };
     headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
     data.forEach((sale, index) => {
         const row = worksheet.addRow({
-            no: index + 1, tanggal: sale.tanggal, nama: sale.nama, jumlah: sale.jumlah,
-            harga: sale.jumlah > 0 ? Math.round(sale.total_harga / sale.jumlah) : 0,
-            total: sale.total_harga
+            no: index + 1,
+            waktu: format(new Date(sale.created_at), 'HH:mm'),
+            pelanggan: sale.nama,
+            total: sale.total_harga,
+            kategori: sale.kategori,
+            id: sale.id
         });
+
         row.eachCell((cell, colNumber) => {
             cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
-            if (colNumber === 1 || colNumber === 4) cell.alignment = { horizontal: 'center' };
-            else if (colNumber >= 5) { cell.numFmt = '#,##0'; cell.alignment = { horizontal: 'right' }; }
+            if (colNumber === 4) {
+                cell.numFmt = '#,##0';
+                cell.alignment = { horizontal: 'right' };
+            }
         });
     });
-
-    const totalHarga = data.reduce((sum, s) => sum + s.total_harga, 0);
-    const totalRow = worksheet.addRow({ no: '', tanggal: '', nama: 'TOTAL', jumlah: '', harga: '', total: totalHarga });
-    totalRow.eachCell((cell, colNumber) => {
-        cell.font = { bold: true };
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
-        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
-        if (colNumber >= 5) { cell.numFmt = '#,##0'; cell.alignment = { horizontal: 'right' }; }
-    });
-    worksheet.mergeCells(`A${totalRow.number}:B${totalRow.number}`);
 
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Laporan_Penjualan_${kategori}_${date}.xlsx`;
-    link.click();
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Laporan_Penjualan_${kategori}_${date}.xlsx`;
+    a.click();
     window.URL.revokeObjectURL(url);
 }
 
@@ -100,385 +117,290 @@ async function exportPDFForKategori(data: Sale[], kategori: string, date: string
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     doc.text(`No. Cetak: ${printNumber}`, 15, startY);
     doc.text(`Kategori: ${kategori}`, 15, startY + 5);
-    doc.text(`Tanggal: ${printDate}`, 195, startY, { align: 'right' });
-    doc.text(`Total Transaksi: ${data.length}`, 195, startY + 5, { align: 'right' });
+    doc.text(`Tanggal Laporan: ${printDate}`, 15, startY + 10);
 
-    const totalHarga = data.reduce((sum, s) => sum + s.total_harga, 0);
-    // @ts-ignore
     autoTable(doc, {
+        startY: startY + 15,
+        head: [['No', 'Waktu', 'Nama Pelanggan', 'Total Belanja']],
+        body: data.map((s, i) => [
+            i + 1,
+            format(new Date(s.created_at), 'HH:mm'),
+            s.nama,
+            new Intl.NumberFormat('id-ID').format(s.total_harga)
+        ]),
         theme: 'grid',
-        headStyles: { fillColor: variant === 'orange' ? [249, 115, 22] : [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold' },
-        styles: { fontSize: 8, lineColor: [200, 200, 200], lineWidth: 0.1 },
-        foot: [['', '', 'TOTAL', '', '', `Rp ${totalHarga.toLocaleString('id-ID')}`]],
-        footStyles: { fillColor: [241, 245, 249], textColor: [0, 0, 0], fontStyle: 'bold' }
+        headStyles: {
+            fillColor: variant === 'orange' ? [249, 115, 22] : [37, 99, 235],
+        },
+        styles: { fontSize: 8, lineColor: [200, 200, 200], lineWidth: 0.1 }
     });
 
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
-    doc.setFontSize(9); doc.setFont('helvetica', 'italic');
-    doc.text('Dicetak secara otomatis oleh Sistem Forbis Cimanggung', 105, finalY + 10, { align: 'center' });
     doc.save(`Laporan_Penjualan_${kategori}_${date}.pdf`);
 }
 
-// ── Per-kategori table ───────────────────────────────────────────────────────
-
-function HistoryKategoriTable({ data: initialData, kategori, date, variant }: {
-    data: Sale[]; kategori: 'Dapur' | 'Warung'; date: string; variant: 'orange' | 'blue';
-}) {
-    const [exporting, setExporting] = useState(false);
-    const [data, setData] = useState<Sale[]>(initialData);
-    const [deletedItems, setDeletedItems] = useState<Sale[]>([]);
-    const [deletingId, setDeletingId] = useState<number | null>(null);
-    const [restoringId, setRestoringId] = useState<number | null>(null);
-    const [permDeletingId, setPermDeletingId] = useState<number | null>(null);
-    const [confirmPermDelete, setConfirmPermDelete] = useState<Sale | null>(null);
+export function SalesHistory({ sales }: SalesHistoryProps) {
+    const [date, setDate] = useState<Date>(new Date());
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterKategori, setFilterKategori] = useState<'Semua' | 'Dapur' | 'Warung'>('Semua');
     const [showTrash, setShowTrash] = useState(false);
+    const [loadingAction, setLoadingAction] = useState<number | null>(null);
 
-    // Sync if parent re-fetches
-    useEffect(() => { setData(initialData); setDeletedItems([]); }, [initialData]);
+    // Pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
-    // Soft delete — record moves to local trash, restorable
-    const handleDelete = async (sale: Sale) => {
-        setDeletingId(sale.id);
-        const res = await deleteHistorySale(sale.id);
-        if (res.error) { alert('Gagal menghapus: ' + res.error); }
-        else {
-            setData(prev => prev.filter(s => s.id !== sale.id));
-            setDeletedItems(prev => [sale, ...prev]);
-        }
-        setDeletingId(null);
-    };
+    const filteredSales = useMemo(() => {
+        return sales.filter(sale => {
+            const saleDate = new Date(sale.created_at).toDateString();
+            const selectedDate = date.toDateString();
+            const matchesDate = saleDate === selectedDate;
+            const matchesSearch = sale.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                String(sale.id).toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesKategori = filterKategori === 'Semua' || sale.kategori === filterKategori;
+            const matchesTrash = showTrash ? sale.is_deleted : !sale.is_deleted;
 
-    // Permanent delete — no restore possible
-    const handlePermDelete = async () => {
-        if (!confirmPermDelete) return;
-        setPermDeletingId(confirmPermDelete.id);
-        setConfirmPermDelete(null);
-        const res = await deleteHistorySale(confirmPermDelete.id);
-        if (res.error) { alert('Gagal hapus permanen: ' + res.error); }
-        else { setData(prev => prev.filter(s => s.id !== confirmPermDelete.id)); }
-        setPermDeletingId(null);
-    };
+            return matchesDate && matchesSearch && matchesKategori && matchesTrash;
+        });
+    }, [sales, date, searchTerm, filterKategori, showTrash]);
+
+    const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
+    const currentSales = filteredSales.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    const salesDapur = filteredSales.filter(s => s.kategori === 'Dapur');
+    const salesWarung = filteredSales.filter(s => s.kategori === 'Warung');
 
     const handleRestore = async (sale: Sale) => {
-        setRestoringId(sale.id);
+        setLoadingAction(sale.id);
         const res = await restoreHistorySale(sale);
-        if (res.error) { alert('Gagal restore: ' + res.error); }
-        else {
-            setDeletedItems(prev => prev.filter(s => s.id !== sale.id));
-            setData(prev => [sale, ...prev].sort((a, b) => b.id - a.id));
-        }
-        setRestoringId(null);
+        if (res.success) alert('Berhasil dikembalikan');
+        else alert('Gagal mengembalikan: ' + res.error);
+        setLoadingAction(null);
     };
 
-    const handleExcel = async () => { setExporting(true); await exportExcelForKategori(data, kategori, date, variant); setExporting(false); };
-    const handlePDF = () => { setExporting(true); exportPDFForKategori(data, kategori, date, variant); setExporting(false); };
+    const handleDeleteFinal = async (id: number) => {
+        if (!confirm('Hapus permanen? Data tidak bisa dikembalikan lagi.')) return;
+        setLoadingAction(id);
+        const res = await deleteHistorySale(id);
+        if (res.success) alert('Berhasil dihapus permanen');
+        else alert('Gagal menghapus: ' + res.error);
+        setLoadingAction(null);
+    };
 
     return (
-        <div className="space-y-3">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <h3 className={cn(
-                    'text-lg font-bold px-4 py-2 rounded-lg border-l-4 shadow-sm inline-flex items-center gap-2',
-                    variant === 'orange' ? 'bg-orange-500/10 text-orange-600 border-orange-500' : 'bg-blue-500/10 text-blue-600 border-blue-500'
-                )}>
-                    Penjualan {kategori}
-                    <span className="text-sm font-normal opacity-70">({data.length} transaksi)</span>
-                    {deletedItems.length > 0 && (
-                        <span className="ml-1 text-xs bg-red-500/10 text-red-600 rounded-full px-2 py-0.5 font-semibold">
-                            {deletedItems.length} dihapus
-                        </span>
-                    )}
-                </h3>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className={cn(
-                            'gap-2 shadow-sm',
-                            variant === 'orange' ? 'border-orange-200 text-orange-700 hover:bg-orange-50' : 'border-blue-200 text-blue-700 hover:bg-blue-50'
-                        )} disabled={exporting || data.length === 0}>
-                            {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
-                            Cetak Laporan {kategori} <ChevronDown className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Pilih Format</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleExcel}><FileSpreadsheet className="mr-2 h-4 w-4 text-green-600" />Export Excel (.xlsx)</DropdownMenuItem>
-                        <DropdownMenuItem onClick={handlePDF}><FileText className="mr-2 h-4 w-4 text-red-600" />Export PDF (.pdf)</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+        <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div className="flex flex-wrap items-end gap-3">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Pilih Tanggal</label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" className="w-[200px] justify-start text-left font-normal rounded-xl">
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {format(date, 'PPP', { locale: id })}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 rounded-xl" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={date}
+                                    onSelect={(d) => d && setDate(d)}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Filter Kategori</label>
+                        <Select value={filterKategori} onValueChange={(v: any) => setFilterKategori(v)}>
+                            <SelectTrigger className="w-[150px] rounded-xl">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                                <SelectItem value="Semua">Semua</SelectItem>
+                                <SelectItem value="Dapur">Dapur</SelectItem>
+                                <SelectItem value="Warung">Warung</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="relative w-full md:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Cari pelanggan / ID..."
+                            className="pl-9 rounded-xl"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                </div>
+
+                <div className="flex gap-2">
+                    <Button
+                        variant={showTrash ? "default" : "outline"}
+                        className="rounded-xl gap-2"
+                        onClick={() => { setShowTrash(!showTrash); setCurrentPage(1); }}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        {showTrash ? 'Lihat Riwayat' : 'Kotak Sampah'}
+                    </Button>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="rounded-xl gap-2 border-primary/20 text-primary hover:bg-primary/5">
+                                <FileDown className="h-4 w-4" /> Export Laporan
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                            <DropdownMenuLabel>Export Data Hari Ini</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                                disabled={salesDapur.length === 0}
+                                onClick={() => exportExcelForKategori(salesDapur, 'Dapur', format(date, 'yyyy-MM-dd'), 'orange')}
+                                className="gap-2 cursor-pointer"
+                            >
+                                <FileSpreadsheet className="h-4 w-4 text-green-600" /> Excel (Dapur)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                disabled={salesWarung.length === 0}
+                                onClick={() => exportExcelForKategori(salesWarung, 'Warung', format(date, 'yyyy-MM-dd'), 'blue')}
+                                className="gap-2 cursor-pointer"
+                            >
+                                <FileSpreadsheet className="h-4 w-4 text-green-600" /> Excel (Warung)
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                                disabled={salesDapur.length === 0}
+                                onClick={() => exportPDFForKategori(salesDapur, 'Dapur', format(date, 'yyyy-MM-dd'), 'orange')}
+                                className="gap-2 cursor-pointer"
+                            >
+                                <FileText className="h-4 w-4 text-red-600" /> PDF (Dapur)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                disabled={salesWarung.length === 0}
+                                onClick={() => exportPDFForKategori(salesWarung, 'Warung', format(date, 'yyyy-MM-dd'), 'blue')}
+                                className="gap-2 cursor-pointer"
+                            >
+                                <FileText className="h-4 w-4 text-red-600" /> PDF (Warung)
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
 
-            {/* Active table */}
-            <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <Table className="min-w-[520px]">
-                        <TableHeader className="bg-muted/50">
-                            <TableRow>
-                                <TableHead className="w-10">No</TableHead>
-                                <TableHead>Tanggal</TableHead>
-                                <TableHead>Nama Barang</TableHead>
-                                <TableHead className="text-center">Qty</TableHead>
-                                <TableHead className="text-right">Total Harga</TableHead>
-                                <TableHead className="w-20 text-center">Aksi</TableHead>
+            <Card className="rounded-2xl border-none shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
+                <CardHeader className="pb-0">
+                    <CardTitle className="text-lg">
+                        {showTrash ? 'Kotak Sampah (Data Dihapus)' : `Riwayat Transaksi - ${format(date, 'dd MMMM yyyy', { locale: id })}`}
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="hover:bg-transparent border-muted/50">
+                                <TableHead className="w-12 text-center">No</TableHead>
+                                <TableHead>Waktu</TableHead>
+                                <TableHead>Pelanggan</TableHead>
+                                <TableHead>Kategori</TableHead>
+                                <TableHead className="text-right">Total</TableHead>
+                                <TableHead className="text-right">Aksi</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {data.length > 0 ? data.map((sale, i) => (
-                                <TableRow key={sale.id} className="hover:bg-muted/50 transition-colors">
-                                    <TableCell className="text-center text-muted-foreground text-sm">{i + 1}</TableCell>
-                                    <TableCell className="text-muted-foreground whitespace-nowrap">{sale.tanggal}</TableCell>
-                                    <TableCell className="font-semibold text-foreground">{sale.nama}</TableCell>
-                                    <TableCell className="text-center">
-                                        <span className="bg-muted px-2 py-1 rounded text-xs font-bold text-muted-foreground">{sale.jumlah}</span>
-                                    </TableCell>
-                                    <TableCell className="text-right font-mono font-bold text-foreground">{formatRupiah(sale.total_harga)}</TableCell>
-                                    <TableCell className="text-center">
-                                        <div className="flex items-center justify-center gap-1">
-                                            {/* Soft delete — moves to trash, restorable */}
-                                            <button
-                                                onClick={() => handleDelete(sale)}
-                                                disabled={deletingId === sale.id || permDeletingId === sale.id}
-                                                className="p-1.5 rounded-lg text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 transition-colors disabled:opacity-40"
-                                                title="Hapus (bisa di-restore)"
-                                            >
-                                                {deletingId === sale.id
-                                                    ? <Loader2 className="h-4 w-4 animate-spin" />
-                                                    : <Trash2 className="h-4 w-4" />}
-                                            </button>
-                                            {/* Permanent delete — no restore */}
-                                            <button
-                                                onClick={() => setConfirmPermDelete(sale)}
-                                                disabled={deletingId === sale.id || permDeletingId === sale.id}
-                                                className="p-1.5 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors disabled:opacity-40"
-                                                title="Hapus permanen (tidak bisa di-restore)"
-                                            >
-                                                {permDeletingId === sale.id
-                                                    ? <Loader2 className="h-4 w-4 animate-spin" />
-                                                    : <XCircle className="h-4 w-4" />}
-                                            </button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            )) : (
+                            {currentSales.length > 0 ? (
+                                currentSales.map((sale, index) => (
+                                    <TableRow key={sale.id} className="hover:bg-muted/30 border-muted/50">
+                                        <TableCell className="text-center font-medium text-muted-foreground">
+                                            {(currentPage - 1) * itemsPerPage + index + 1}
+                                        </TableCell>
+                                        <TableCell className="font-medium">
+                                            {format(new Date(sale.created_at), 'HH:mm')}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="font-semibold">{sale.nama}</div>
+                                            <div className="text-[10px] text-muted-foreground font-mono">{sale.id}</div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${sale.kategori === 'Dapur' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
+                                                }`}>
+                                                {sale.kategori}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-right font-bold text-primary">
+                                            Rp {new Intl.NumberFormat('id-ID').format(sale.total_harga)}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            {showTrash ? (
+                                                <div className="flex justify-end gap-2">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                        disabled={loadingAction === sale.id}
+                                                        onClick={() => handleRestore(sale)}
+                                                    >
+                                                        {loadingAction === sale.id ? <RefreshCcw className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                        disabled={loadingAction === sale.id}
+                                                        onClick={() => handleDeleteFinal(sale.id)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <Button size="sm" variant="outline" className="h-8 rounded-lg" asChild>
+                                                    <a href={`/dashboard/sales/history/${sale.id}`}>Detail</a>
+                                                </Button>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="h-20 text-center text-muted-foreground italic">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <ReceiptText className="h-6 w-6 opacity-20" />
-                                            <span>Tidak ada data {kategori} di tanggal ini.</span>
-                                        </div>
+                                    <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                                        Tidak ada data transaksi.
                                     </TableCell>
-                                </TableRow>
-                            )}
-                            {data.length > 0 && (
-                                <TableRow className="bg-muted/50 font-bold border-t-2 border-border">
-                                    <TableCell colSpan={3} className="text-right text-muted-foreground">TOTAL</TableCell>
-                                    <TableCell className="text-center text-foreground">{data.reduce((s, r) => s + r.jumlah, 0)}</TableCell>
-                                    <TableCell className="text-right font-mono text-foreground">{formatRupiah(data.reduce((s, r) => s + r.total_harga, 0))}</TableCell>
-                                    <TableCell />
                                 </TableRow>
                             )}
                         </TableBody>
                     </Table>
-                </div>
-            </div>
 
-            {/* Trash section */}
-            {deletedItems.length > 0 && (
-                <div className="rounded-xl border border-dashed border-red-500/30 bg-red-500/5 overflow-hidden">
-                    <button
-                        onClick={() => setShowTrash(p => !p)}
-                        className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors"
-                    >
-                        <span className="flex items-center gap-2">
-                            <Trash2 className="h-4 w-4" />
-                            Sampah ({deletedItems.length} item dihapus) — klik untuk {showTrash ? 'sembunyikan' : 'lihat'}
-                        </span>
-                        {showTrash ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </button>
-                    {showTrash && (
-                        <div className="overflow-x-auto border-t border-red-500/10">
-                            <Table className="min-w-[500px]">
-                                <TableBody>
-                                    {deletedItems.map(sale => (
-                                        <TableRow key={sale.id} className="opacity-70 bg-red-500/5">
-                                            <TableCell className="w-10 text-center text-muted-foreground text-sm line-through">#{sale.id}</TableCell>
-                                            <TableCell className="text-muted-foreground whitespace-nowrap line-through">{sale.tanggal}</TableCell>
-                                            <TableCell className="text-muted-foreground line-through">{sale.nama}</TableCell>
-                                            <TableCell className="text-center text-muted-foreground line-through">{sale.jumlah}</TableCell>
-                                            <TableCell className="text-right font-mono text-muted-foreground line-through">{formatRupiah(sale.total_harga)}</TableCell>
-                                            <TableCell className="text-center">
-                                                <button
-                                                    onClick={() => handleRestore(sale)}
-                                                    disabled={restoringId === sale.id}
-                                                    className="p-1.5 rounded-lg text-green-600 hover:bg-green-500/20 transition-colors disabled:opacity-50 flex items-center gap-1 text-xs font-medium"
-                                                    title="Restore data ini"
-                                                >
-                                                    {restoringId === sale.id
-                                                        ? <Loader2 className="h-4 w-4 animate-spin" />
-                                                        : <><RotateCcw className="h-3.5 w-3.5" /> Restore</>}
-                                                </button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Permanent delete confirmation dialog */}
-            <AlertDialog open={!!confirmPermDelete} onOpenChange={(open) => { if (!open) setConfirmPermDelete(null); }}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>🗑️ Hapus Permanen?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Data <strong>"{confirmPermDelete?.nama}"</strong> ({confirmPermDelete?.tanggal}) akan dihapus secara <strong>permanen</strong> dan <strong>tidak bisa dipulihkan</strong> kembali. Lanjutkan?
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction onClick={handlePermDelete} className="bg-red-600 hover:bg-red-700">
-                            Ya, Hapus Permanen
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </div>
-    );
-}
-
-// ── Main Component ───────────────────────────────────────────────────────────
-
-export function SalesHistory() {
-    const [historyDates, setHistoryDates] = useState<string[]>([]);
-    const [selectedDate, setSelectedDate] = useState<string | null>(null);
-    const [sales, setSales] = useState<Sale[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [month, setMonth] = useState<Date>(new Date());
-
-    const today = new Date().toLocaleDateString('en-CA');
-
-    useEffect(() => {
-        getHistoryDates().then(res => setHistoryDates(res.dates));
-    }, []);
-
-    useEffect(() => {
-        if (!selectedDate) return;
-        setLoading(true);
-        getSalesByDate(selectedDate).then(res => {
-            setSales(res.data || []);
-            setLoading(false);
-        });
-    }, [selectedDate]);
-
-    // Convert string dates to Date objects for DayPicker modifiers
-    const historyDateObjects = historyDates.map(toLocalDate);
-    const todayDateObject = toLocalDate(today);
-
-    const handleDayClick = (day: Date, modifiers: Record<string, boolean>) => {
-        if (!modifiers.history && !modifiers.today) return; // only clickable if marked
-        const dateStr = day.toLocaleDateString('en-CA');
-        setSelectedDate(dateStr);
-    };
-
-    const salesDapur = sales.filter(s => s.kategori === 'Dapur');
-    const salesWarung = sales.filter(s => s.kategori === 'Warung' || !s.kategori);
-
-    return (
-        <div className="space-y-8">
-            <div className="flex flex-col lg:flex-row gap-8">
-                {/* Calendar Card */}
-                <div className="bg-card rounded-2xl border border-border shadow-sm p-4 w-fit mx-auto lg:mx-0 shrink-0">
-                    <p className="text-sm font-medium text-muted-foreground mb-3 px-1">Pilih tanggal untuk melihat data:</p>
-
-                    {/* Legend */}
-                    <div className="flex gap-4 mb-3 px-1 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" /> Hari ini
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" /> Ada data
-                        </span>
-                    </div>
-
-                    <style>{`
-                        .rdp-day_history { position: relative; }
-                        .rdp-day_history::after {
-                            content: '';
-                            position: absolute;
-                            bottom: 2px;
-                            left: 50%;
-                            transform: translateX(-50%);
-                            width: 6px;
-                            height: 6px;
-                            border-radius: 50%;
-                            background: #22c55e;
-                        }
-                        .rdp-day_today_active { position: relative; }
-                        .rdp-day_today_active::after {
-                            content: '';
-                            position: absolute;
-                            bottom: 2px;
-                            left: 50%;
-                            transform: translateX(-50%);
-                            width: 6px;
-                            height: 6px;
-                            border-radius: 50%;
-                            background: #3b82f6;
-                        }
-                        .rdp-day_history, .rdp-day_today_active {
-                            cursor: pointer !important;
-                            font-weight: 600;
-                        }
-                        .rdp-day_selected_custom {
-                            background: #f3f4f6 !important;
-                            border-radius: 8px;
-                            font-weight: 700;
-                        }
-                    `}</style>
-
-                    <DayPicker
-                        month={month}
-                        onMonthChange={setMonth}
-                        modifiers={{
-                            history: historyDateObjects,
-                            today_active: [todayDateObject],
-                            selected_custom: selectedDate ? [toLocalDate(selectedDate)] : [],
-                        }}
-                        modifiersClassNames={{
-                            history: 'rdp-day_history',
-                            today_active: 'rdp-day_today_active',
-                            selected_custom: 'rdp-day_selected_custom',
-                        }}
-                        onDayClick={handleDayClick}
-                        showOutsideDays={false}
-                    />
-                </div>
-
-                {/* Right panel - info or table */}
-                <div className="flex-1 min-w-0">
-                    {!selectedDate ? (
-                        <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center text-muted-foreground rounded-2xl border border-dashed border-border bg-muted/30 p-8">
-                            <History className="h-10 w-10 mx-auto mb-3 opacity-20" />
-                            <p className="font-medium">Pilih tanggal di kalender</p>
-                            <p className="text-sm mt-1">Klik tanggal yang memiliki tanda ● untuk melihat data.</p>
-                        </div>
-                    ) : loading ? (
-                        <div className="flex justify-center items-center min-h-[200px]">
-                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        </div>
-                    ) : (
-                        <div className="space-y-8">
-                            <p className="text-sm font-medium text-muted-foreground">
-                                Data penjualan: <strong className="text-foreground">{selectedDate}</strong>
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-between py-4">
+                            <p className="text-sm text-muted-foreground">
+                                Halaman {currentPage} dari {totalPages}
                             </p>
-                            <HistoryKategoriTable data={salesDapur} kategori="Dapur" date={selectedDate} variant="orange" />
-                            <HistoryKategoriTable data={salesWarung} kategori="Warung" date={selectedDate} variant="blue" />
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    className="rounded-lg h-8 w-8 p-0"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="rounded-lg h-8 w-8 p-0"
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
                         </div>
                     )}
-                </div>
-            </div>
+                </CardContent>
+            </Card>
         </div>
     );
 }

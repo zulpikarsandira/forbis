@@ -1,9 +1,8 @@
-"use client"
+'use client'
 
 import { useState } from "react"
-import { FileDown, Loader2, FileSpreadsheet, FileText, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { Sale } from "@/lib/actions/sales"
+import { FileDown, Loader2, FileSpreadsheet, FileText } from "lucide-react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { cn } from "@/lib/utils"
@@ -18,26 +17,51 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-interface BulkDownloadInvoiceButtonProps {
-    data: Sale[];
-    kategori: string;
-    variant: 'orange' | 'blue';
+interface SaleItem {
+    id: string
+    nama_barang: string
+    jumlah: number
+    harga_satuan: number
+    total_harga: number
 }
 
-export function BulkDownloadInvoiceButton({ data, kategori, variant }: BulkDownloadInvoiceButtonProps) {
+interface Sale {
+    id: string
+    nama: string
+    tanggal: string
+    items: SaleItem[]
+    total_harga: number
+}
+
+interface BulkDownloadInvoiceButtonProps {
+    sales: Sale[]
+    kategori: 'Warung' | 'Dapur'
+    variant?: 'orange' | 'blue'
+    className?: string
+}
+
+export function BulkDownloadInvoiceButton({
+    sales,
+    kategori,
+    variant = 'blue',
+    className
+}: BulkDownloadInvoiceButtonProps) {
     const [loading, setLoading] = useState(false)
 
-    const handleDownload = async () => {
-        if (data.length === 0) return
-
+    const exportPDF = async () => {
         setLoading(true)
         try {
             const doc = new jsPDF()
-            const today = new Date().toLocaleDateString('id-ID', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            })
+            const tableData = sales.flatMap((sale, saleIndex) =>
+                sale.items.map((item, itemIndex) => [
+                    itemIndex === 0 ? saleIndex + 1 : "",
+                    itemIndex === 0 ? new Date(sale.tanggal).toLocaleDateString('id-ID') : "",
+                    item.nama_barang,
+                    item.jumlah,
+                    new Intl.NumberFormat('id-ID').format(item.harga_satuan),
+                    new Intl.NumberFormat('id-ID').format(item.total_harga)
+                ])
+            )
 
             const printNumber = `INV-${Date.now().toString().slice(-6)}`
             const logoBase64 = await getLogoBase64();
@@ -48,22 +72,8 @@ export function BulkDownloadInvoiceButton({ data, kategori, variant }: BulkDownl
             doc.setFont("helvetica", "normal")
             doc.text(`No. Cetak: ${printNumber}`, 15, startY)
             doc.text(`Kategori: ${kategori}`, 15, startY + 5)
-            doc.text(`Tanggal Cetak: ${today}`, 195, startY, { align: 'right' })
-            doc.text(`Total Transaksi: ${data.length}`, 195, startY + 5, { align: 'right' })
+            doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 15, startY + 10)
 
-            // Table
-            const tableData = data.map((sale, index) => [
-                index + 1,
-                sale.tanggal,
-                sale.nama,
-                sale.jumlah,
-                `Rp ${sale.jumlah > 0 ? Math.round(sale.total_harga / sale.jumlah).toLocaleString('id-ID') : 0}`,
-                `Rp ${sale.total_harga.toLocaleString('id-ID')}`
-            ])
-
-            const totalHarga = data.reduce((sum, item) => sum + item.total_harga, 0)
-
-            // @ts-ignore
             autoTable(doc, {
                 startY: startY + 15,
                 head: [['No', 'Tanggal', 'Nama Barang', 'Qty', 'Harga', 'Total Harga']],
@@ -71,45 +81,35 @@ export function BulkDownloadInvoiceButton({ data, kategori, variant }: BulkDownl
                 theme: 'grid',
                 headStyles: {
                     fillColor: variant === 'orange' ? [249, 115, 22] : [37, 99, 235],
-                    textColor: [255, 255, 255],
-                    fontStyle: 'bold'
                 },
-                foot: [[
-                    '', '', 'TOTAL', '', '',
-                    `Rp ${totalHarga.toLocaleString('id-ID')}`
-                ]],
-                footStyles: {
-                    fillColor: [241, 245, 249],
-                    textColor: [0, 0, 0],
-                    fontStyle: 'bold'
-                }
+                styles: { fontSize: 8, lineColor: [200, 200, 200], lineWidth: 0.1 }
             })
 
-            // Footer
-            // @ts-ignore
-            const finalY = (doc as any).lastAutoTable.finalY + 10
-            doc.setFontSize(9)
-            doc.setFont("helvetica", "italic")
-            doc.text('Dicetak secara otomatis oleh Sistem Forbis Cimanggung', 105, finalY + 10, { align: 'center' })
-
-            doc.save(`Laporan_Penjualan_${kategori}_${new Date().toISOString().split('T')[0]}.pdf`)
+            doc.save(`Invoice_Bulk_${kategori}_${new Date().toISOString().split('T')[0]}.pdf`)
         } catch (error) {
-            console.error('Failed to generate PDF:', error)
-            alert('Gagal export PDF.')
+            console.error("PDF Export error:", error)
         } finally {
             setLoading(false)
         }
     }
 
-    const handleExcelExport = async () => {
-        if (data.length === 0) return
+    const exportExcel = async () => {
         setLoading(true)
         try {
             const workbook = new ExcelJS.Workbook()
             const worksheet = workbook.addWorksheet(`Laporan ${kategori}`)
             const logoBase64 = await getLogoBase64();
 
-            const startRow = applyExcelHeader(workbook, worksheet, `INVOICE`, 'F', logoBase64)
+            const columns = [
+                { header: 'No', key: 'no', width: 5 },
+                { header: 'Tanggal', key: 'tanggal', width: 15 },
+                { header: 'Nama Barang', key: 'nama_barang', width: 30 },
+                { header: 'Qty', key: 'qty', width: 8 },
+                { header: 'Harga', key: 'harga', width: 15 },
+                { header: 'Total Harga', key: 'total', width: 15 },
+            ];
+
+            const startRow = applyExcelHeader(workbook, worksheet, `INVOICE`, columns, logoBase64)
 
             // Styling Header
             const headerRow = worksheet.getRow(startRow)
@@ -121,102 +121,76 @@ export function BulkDownloadInvoiceButton({ data, kategori, variant }: BulkDownl
             }
             headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
 
-            // Data
-            data.forEach((sale, index) => {
-                const row = worksheet.addRow({
-                    no: index + 1,
-                    tanggal: sale.tanggal,
-                    nama: sale.nama,
-                    jumlah: sale.jumlah,
-                    harga: sale.jumlah > 0 ? Math.round(sale.total_harga / sale.jumlah) : 0,
-                    total: sale.total_harga
+            let saleCounter = 1
+            sales.forEach((sale) => {
+                sale.items.forEach((item, itemIndex) => {
+                    const row = worksheet.addRow({
+                        no: itemIndex === 0 ? saleCounter : "",
+                        tanggal: itemIndex === 0 ? new Date(sale.tanggal).toLocaleDateString('id-ID') : "",
+                        nama_barang: item.nama_barang,
+                        qty: item.jumlah,
+                        harga: item.harga_satuan,
+                        total: item.total_harga
+                    })
+
+                    row.eachCell((cell, colNumber) => {
+                        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } }
+                        if (colNumber === 5 || colNumber === 6) {
+                            cell.numFmt = '#,##0'
+                            cell.alignment = { horizontal: 'right' }
+                        }
+                    })
                 })
-
-                // Borders & Alignment
-                row.eachCell((cell, colNumber) => {
-                    cell.border = {
-                        top: { style: 'thin' },
-                        left: { style: 'thin' },
-                        bottom: { style: 'thin' },
-                        right: { style: 'thin' }
-                    }
-                    if (colNumber === 1 || colNumber === 4) {
-                        cell.alignment = { horizontal: 'center' }
-                    } else if (colNumber >= 5) {
-                        cell.numFmt = '#,##0'
-                        cell.alignment = { horizontal: 'right' }
-                    }
-                })
+                saleCounter++
             })
 
-            // Totals
-            const totalHarga = data.reduce((sum, item) => sum + item.total_harga, 0)
-
-            const totalRow = worksheet.addRow({
-                no: '',
-                tanggal: '',
-                nama: 'TOTAL',
-                jumlah: '',
-                harga: '',
-                total: totalHarga
-            })
-
-            totalRow.eachCell((cell, colNumber) => {
-                cell.font = { bold: true }
-                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } }
-                cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } }
-                if (colNumber >= 5) {
-                    cell.numFmt = '#,##0'
-                    cell.alignment = { horizontal: 'right' }
-                }
-            })
-            worksheet.mergeCells(`A${totalRow.number}:B${totalRow.number}`)
-
-
-            // Download
             const buffer = await workbook.xlsx.writeBuffer()
             const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
             const url = window.URL.createObjectURL(blob)
-            const link = document.createElement('a')
-            link.href = url
-            link.download = `Laporan_Penjualan_${kategori}_${new Date().toISOString().split('T')[0]}.xlsx`
-            link.click()
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `Invoice_Bulk_${kategori}_${new Date().toISOString().split('T')[0]}.xlsx`
+            a.click()
             window.URL.revokeObjectURL(url)
-
         } catch (error) {
-            console.error('Excel export failed:', error)
-            alert('Gagal export excel.')
+            console.error("Excel Export error:", error)
         } finally {
             setLoading(false)
         }
     }
 
-
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button
-                    disabled={loading || data.length === 0}
                     variant="outline"
                     className={cn(
-                        "gap-2 shadow-sm transition-all hover:scale-105",
+                        "gap-2 rounded-xl transition-all",
                         variant === 'orange'
-                            ? "border-orange-200 text-orange-700 hover:bg-orange-50 hover:text-orange-800"
-                            : "border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
+                            ? "border-orange-200 hover:bg-orange-50 text-orange-700"
+                            : "border-blue-200 hover:bg-blue-50 text-blue-700",
+                        className
                     )}
+                    disabled={loading || sales.length === 0}
                 >
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
-                    Cetak Laporan {kategori} <ChevronDown className="h-4 w-4" />
+                    {loading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <FileDown className="h-4 w-4" />
+                    )}
+                    Export {kategori}
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Pilih Format</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                <DropdownMenuLabel>Pilih Format Export</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleExcelExport}>
-                    <FileSpreadsheet className="mr-2 h-4 w-4 text-green-600" /> Export Excel (.xlsx)
+                <DropdownMenuItem onClick={exportExcel} className="gap-2 cursor-pointer">
+                    <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                    Export Excel (.xlsx)
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDownload}>
-                    <FileText className="mr-2 h-4 w-4 text-red-600" /> Export PDF (.pdf)
+                <DropdownMenuItem onClick={exportPDF} className="gap-2 cursor-pointer">
+                    <FileText className="h-4 w-4 text-red-600" />
+                    Export PDF (.pdf)
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

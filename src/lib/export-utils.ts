@@ -63,12 +63,24 @@ export function applyPDFHeader(doc: any, title: string, logoBase64?: string) {
  * @param workbook The ExcelJS workbook instance
  * @param worksheet The ExcelJS worksheet instance
  * @param title The document title
- * @param lastColChar The last column character (e.g., 'H') for merging
+ * @param columns Array of column definitions { header, key, width }
  * @param logoBase64 Optional logo in base64 format
- * @returns The row number where table headers should start
+ * @returns The row number where table headers are placed
  */
-export function applyExcelHeader(workbook: any, worksheet: any, title: string, lastColChar: string, logoBase64?: string) {
-    // Add Logo if provided
+export function applyExcelHeader(
+    workbook: any,
+    worksheet: any,
+    title: string,
+    columns: { header: string; key: string; width: number }[],
+    logoBase64?: string
+) {
+    // 1. Set Column widths and keys (but don't rely on auto-header at row 1)
+    worksheet.columns = columns.map(col => ({
+        key: col.key,
+        width: col.width
+    }));
+
+    // 2. Add Logo if provided
     if (logoBase64) {
         try {
             const logoId = workbook.addImage({
@@ -81,39 +93,51 @@ export function applyExcelHeader(workbook: any, worksheet: any, title: string, l
         }
     }
 
-    // Add logic for header rows
+    const lastColChar = String.fromCharCode(64 + columns.length);
+
+    // 3. Add Header Info
+    // Cooperative Title
     worksheet.mergeCells(`C1:${lastColChar}1`);
     const titleRow = worksheet.getCell('C1');
     titleRow.value = KOP_TEXT.title;
     titleRow.font = { bold: true, size: 14 };
     titleRow.alignment = { horizontal: 'center', vertical: 'middle' };
 
+    // Legal Info
     worksheet.mergeCells(`C2:${lastColChar}2`);
     const legalRow = worksheet.getCell('C2');
     legalRow.value = KOP_TEXT.legal;
     legalRow.font = { size: 10 };
     legalRow.alignment = { horizontal: 'center', vertical: 'middle' };
 
+    // Address
     worksheet.mergeCells(`C3:${lastColChar}3`);
     const addrRow = worksheet.getCell('C3');
     addrRow.value = `${KOP_TEXT.address}, ${KOP_TEXT.district}`;
     addrRow.font = { size: 10 };
     addrRow.alignment = { horizontal: 'center', vertical: 'middle' };
 
+    // Document Subject (Title)
     worksheet.mergeCells(`A5:${lastColChar}5`);
     const subjectRow = worksheet.getCell('A5');
     subjectRow.value = title.toUpperCase();
     subjectRow.font = { bold: true, size: 12 };
     subjectRow.alignment = { horizontal: 'center' };
 
-    // Placeholder for "Tanggal Cetak"
+    // Print Date
     worksheet.mergeCells(`A6:${lastColChar}6`);
     const dateRow = worksheet.getCell('A6');
     dateRow.value = `Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`;
     dateRow.font = { italic: true, size: 9 };
     dateRow.alignment = { horizontal: 'right' };
 
-    return 8; // Table starts at row 8
+    // 4. Set Table Headers at Row 8
+    const headerRow = worksheet.getRow(8);
+    columns.forEach((col, index) => {
+        headerRow.getCell(index + 1).value = col.header;
+    });
+
+    return 8; // Table header is at row 8, addRow will start at row 9
 }
 
 /**

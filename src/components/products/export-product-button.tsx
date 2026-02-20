@@ -24,7 +24,7 @@ export function ExportProductButton() {
     const [loading, setLoading] = useState(false);
 
     const [open, setOpen] = useState(false);
-    const [format, setFormat] = useState<'xlsx' | 'pdf'>('xlsx'); // Changed CSV to PDF
+    const [format, setFormat] = useState<'xlsx' | 'pdf'>('xlsx');
     const [template, setTemplate] = useState<'lengkap' | 'sederhana'>('lengkap');
 
     const handleExport = async () => {
@@ -59,33 +59,28 @@ export function ExportProductButton() {
             const logoBase64 = await getLogoBase64();
 
             if (format === 'xlsx') {
-                // --- EXCELJS IMPLEMENTATION ---
                 const workbook = new ExcelJS.Workbook();
                 const worksheet = workbook.addWorksheet('Data Barang');
 
-                if (template === 'lengkap') {
-                    worksheet.columns = [
-                        { header: 'Kode', key: 'kode', width: 12 },
-                        { header: 'Nama Barang', key: 'nama', width: 30 },
-                        { header: 'Jenis', key: 'jenis', width: 15 },
-                        { header: 'Suplier', key: 'suplier', width: 20 },
-                        { header: 'Harga Modal', key: 'modal', width: 15 },
-                        { header: 'Harga Jual', key: 'harga', width: 15 },
-                        { header: 'Stok', key: 'stok', width: 10 },
-                        { header: 'Tgl Update', key: 'updated', width: 15 },
-                    ];
-                } else {
-                    worksheet.columns = [
-                        { header: 'Kode', key: 'kode', width: 12 },
-                        { header: 'Nama Barang', key: 'nama', width: 30 },
-                        { header: 'Harga Jual', key: 'harga', width: 15 },
-                        { header: 'Stok', key: 'stok', width: 10 },
-                    ];
-                }
+                const columns = template === 'lengkap' ? [
+                    { header: 'Kode', key: 'kode', width: 12 },
+                    { header: 'Nama Barang', key: 'nama', width: 30 },
+                    { header: 'Jenis', key: 'jenis', width: 15 },
+                    { header: 'Suplier', key: 'suplier', width: 20 },
+                    { header: 'Harga Modal', key: 'modal', width: 15 },
+                    { header: 'Harga Jual', key: 'harga', width: 15 },
+                    { header: 'Stok', key: 'stok', width: 10 },
+                    { header: 'Tgl Update', key: 'updated', width: 15 },
+                ] : [
+                    { header: 'Kode', key: 'kode', width: 12 },
+                    { header: 'Nama Barang', key: 'nama', width: 30 },
+                    { header: 'Harga Jual', key: 'harga', width: 15 },
+                    { header: 'Stok', key: 'stok', width: 10 },
+                ];
 
-                const startRow = applyExcelHeader(workbook, worksheet, 'DATA BARANG', template === 'lengkap' ? 'H' : 'D', logoBase64);
+                const startRow = applyExcelHeader(workbook, worksheet, 'DATA BARANG', columns, logoBase64);
 
-                // Styling Header
+                // Styling Header row (row 8)
                 const headerRow = worksheet.getRow(startRow);
                 headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
                 headerRow.fill = {
@@ -95,7 +90,7 @@ export function ExportProductButton() {
                 };
                 headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
-                // Add Data
+                // Add Data starting below header
                 exportData.forEach((item) => {
                     const row = worksheet.addRow(template === 'lengkap' ? {
                         kode: item['Kode'],
@@ -138,7 +133,6 @@ export function ExportProductButton() {
             } else {
                 // --- PDF IMPLEMENTATION ---
                 const doc = new jsPDF();
-
                 const startY = applyPDFHeader(doc, 'DATA BARANG', logoBase64);
 
                 const headIndices = template === 'lengkap'
@@ -160,7 +154,7 @@ export function ExportProductButton() {
                     body: bodyData,
                     startY: startY,
                     theme: 'grid',
-                    headStyles: { fillColor: [37, 99, 235] }, // Blue
+                    headStyles: { fillColor: [37, 99, 235] },
                     styles: { fontSize: 8, lineColor: [200, 200, 200], lineWidth: 0.1 }
                 });
 
