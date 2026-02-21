@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Lock, Mail, Users, ShoppingCart, TrendingUp, PieChart, Package, Calendar, ShieldCheck, User } from 'lucide-react';
+import { Loader2, Lock, Mail, ShieldCheck, User } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 type LoginRole = 'admin' | 'user';
 
@@ -58,41 +59,8 @@ export default function LoginPage() {
         }
     };
 
-    // Floating icons configuration
-    const icons = [
-        { Icon: Users, delay: 0, x: '10%', duration: 15 },
-        { Icon: ShoppingCart, delay: 2, x: '80%', duration: 18 },
-        { Icon: TrendingUp, delay: 4, x: '20%', duration: 20 },
-        { Icon: PieChart, delay: 1, x: '70%', duration: 16 },
-        { Icon: Package, delay: 3, x: '40%', duration: 19 },
-        { Icon: Calendar, delay: 5, x: '90%', duration: 17 },
-    ];
-
     return (
-        <div className="relative min-h-screen w-full overflow-hidden bg-gradient-primary flex items-center justify-center">
-            {/* Animated Background Icons */}
-            <div className="absolute inset-0 pointer-events-none">
-                {icons.map(({ Icon, delay, x, duration }, i) => (
-                    <motion.div
-                        key={i}
-                        className="absolute bottom-[-100px] text-white/10"
-                        style={{ left: x }}
-                        animate={{
-                            y: '-120vh',
-                            rotate: 360,
-                        }}
-                        transition={{
-                            duration: duration,
-                            repeat: Infinity,
-                            ease: 'linear',
-                            delay: delay,
-                        }}
-                    >
-                        <Icon size={64} />
-                    </motion.div>
-                ))}
-            </div>
-
+        <div className="relative min-h-screen w-full overflow-hidden bg-white flex items-center justify-center">
             {/* Login Card */}
             <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -102,11 +70,13 @@ export default function LoginPage() {
             >
                 <Card className="glass border-white/20 shadow-2xl">
                     <CardHeader className="text-center space-y-2">
-                        <div className="mx-auto bg-white/20 w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-inner">
-                            {loginRole === 'admin'
-                                ? <ShieldCheck className="text-primary w-8 h-8" />
-                                : <User className="text-primary w-8 h-8" />
-                            }
+                        <div className="mx-auto w-32 h-32 relative mb-4 flex items-center justify-center">
+                            <Image
+                                src="/images/1000075381-removebg-preview.png"
+                                alt="Logo Koperasi FORBIS"
+                                fill
+                                className="object-contain"
+                            />
                         </div>
                         <CardTitle className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">
                             Koperasi UMKM
