@@ -69,15 +69,11 @@ export default function LoginPage() {
     if (isSuccess) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
-                <div className="relative w-32 h-32">
-                    <Image
-                        src="/images/fcx.gif"
-                        alt="Loading..."
-                        fill
-                        className="object-contain"
-                        unoptimized
-                    />
-                </div>
+                <img
+                    src="/images/fcx.gif"
+                    alt="Loading..."
+                    className="w-32 h-32 object-contain"
+                />
             </div>
         );
     }
