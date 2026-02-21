@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { calculateProfit, generateAndLockAllocation, getProfitAllocation, resetAllocation, getDetailedProfitData, type ProfitAllocation } from '@/lib/actions/profit';
+import { calculateProfit, generateAndLockAllocation, getProfitAllocation, resetAllocation, getDetailedProfitData, getAggregatedProfitData, type ProfitAllocation } from '@/lib/actions/profit';
 import { Loader2, Calculator, Save, RotateCcw, FileDown } from 'lucide-react';
 import { ProfitChart } from '@/components/profit/profit-chart';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -451,6 +451,267 @@ export default function ProfitPage() {
         setLoading(false);
     };
 
+    const exportRekapToExcel = async () => {
+        setLoading(true);
+        try {
+            const { data, error } = await getAggregatedProfitData(startDate, endDate, activeTab);
+
+            if (error || !data) {
+                alert('Gagal mengambil data rekap: ' + error);
+                setLoading(false);
+                return;
+            }
+
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet(`Rekap ${activeTab}`, {
+                views: [{ state: 'frozen', xSplit: 0, ySplit: 2 }]
+            });
+
+            const logoBase64 = await getLogoBase64();
+
+            const columns = [
+                { header: 'NO', key: 'no', width: 5 },
+                { header: 'TANGGAL', key: 'tgl', width: 12 },
+                { header: 'TOTAL LABA', key: 'laba', width: 15 },
+                { header: 'ZAKAT', key: 'zakat', width: 15 },
+                { header: 'SISA', key: 'sisa', width: 15 },
+                { header: 'SPJG', key: 'spjg', width: 15 },
+                { header: 'CASHBACK DAPUR', key: 'cashback', width: 15 },
+                { header: 'KOP. FORBIS', key: 'kop_forbis', width: 15 },
+                { header: 'OPERASIONAL', key: 'ops', width: 15 },
+                { header: 'SHU', key: 'shu', width: 15 },
+                { header: 'PEKERJA 1', key: 'p1', width: 12 },
+                { header: 'PEKERJA 2', key: 'p2', width: 12 },
+                { header: 'PEKERJA 3', key: 'p3', width: 12 },
+                { header: 'PEKERJA 4', key: 'p4', width: 12 },
+                { header: 'DLL', key: 'dll', width: 12 },
+            ];
+
+            const startRowTable = applyExcelHeader(workbook, worksheet, `Rekap Laporan Pembagian Laba ${activeTab} - ${periodeName}`, columns, logoBase64);
+
+            worksheet.getCell(`A${startRowTable}`).value = "NO";
+            worksheet.getCell(`B${startRowTable}`).value = "TANGGAL";
+            worksheet.getCell(`C${startRowTable}`).value = "TOTAL LABA";
+            worksheet.getCell(`D${startRowTable}`).value = "ZAKAT";
+            worksheet.getCell(`E${startRowTable}`).value = "SISA";
+
+            worksheet.getCell(`F${startRowTable}`).value = "SPJG";
+            worksheet.mergeCells(`F${startRowTable}:G${startRowTable}`);
+
+            worksheet.getCell(`H${startRowTable}`).value = "ALOKASI KOP";
+            worksheet.mergeCells(`H${startRowTable}:I${startRowTable}`);
+
+            worksheet.getCell(`J${startRowTable}`).value = "RINCIAN OPERASIONAL";
+            worksheet.mergeCells(`J${startRowTable}:N${startRowTable}`);
+
+            const secondHeaderRow = startRowTable + 1;
+            worksheet.getCell(`F${secondHeaderRow}`).value = "CASHBACK DAPUR";
+            worksheet.getCell(`G${secondHeaderRow}`).value = "KOP. FORBIS";
+
+            worksheet.getCell(`H${secondHeaderRow}`).value = "OPERASIONAL (80%)";
+            worksheet.getCell(`I${secondHeaderRow}`).value = "SHU (20%)";
+
+            worksheet.getCell(`J${secondHeaderRow}`).value = "PEKERJA 1";
+            worksheet.getCell(`K${secondHeaderRow}`).value = "PEKERJA 2";
+            worksheet.getCell(`L${secondHeaderRow}`).value = "PEKERJA 3";
+            worksheet.getCell(`M${secondHeaderRow}`).value = "PEKERJA 4";
+            worksheet.getCell(`N${secondHeaderRow}`).value = "DLL";
+
+            ['A', 'B', 'C', 'D', 'E'].forEach(col => {
+                worksheet.mergeCells(`${col}${startRowTable}:${col}${secondHeaderRow}`);
+            });
+
+            const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF00B0F0' } } as unknown as ExcelJS.Fill;
+            const fontBold = { bold: true, name: 'Arial', size: 10 } as unknown as ExcelJS.Font;
+            const borderStyle = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } } as unknown as ExcelJS.Borders;
+
+            for (let r = startRowTable; r <= secondHeaderRow; r++) {
+                for (let c = 1; c <= 14; c++) {
+                    const cell = worksheet.getCell(r, c);
+                    cell.fill = headerFill;
+                    cell.font = fontBold;
+                    cell.border = borderStyle;
+                    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+                }
+            }
+
+            let currentRow = startRowTable + 2;
+            data.forEach((item, index) => {
+                const row = worksheet.getRow(currentRow);
+                row.getCell(1).value = index + 1;
+                row.getCell(2).value = item.tanggal;
+                row.getCell(3).value = item.laba;
+                row.getCell(4).value = item.zakat;
+                row.getCell(5).value = item.sisa;
+                row.getCell(6).value = item.cashback_dapur;
+                row.getCell(7).value = item.kop_forbis;
+                row.getCell(8).value = item.operasional;
+                row.getCell(9).value = item.shu;
+                row.getCell(10).value = item.pekerja_a;
+                row.getCell(11).value = item.pekerja_b;
+                row.getCell(12).value = item.pekerja_c;
+                row.getCell(13).value = item.pekerja_d;
+                row.getCell(14).value = item.dll;
+
+                for (let c = 1; c <= 14; c++) {
+                    const cell = row.getCell(c);
+                    cell.border = borderStyle;
+                    cell.alignment = { vertical: 'middle', horizontal: c <= 2 ? 'left' : 'right' };
+                    if (c >= 3) cell.numFmt = '#,##0';
+                }
+                currentRow++;
+            });
+
+            const totals = data.reduce((acc, curr) => ({
+                laba: acc.laba + curr.laba,
+                zakat: acc.zakat + curr.zakat,
+                sisa: acc.sisa + curr.sisa,
+                cashback: acc.cashback + curr.cashback_dapur,
+                kop: acc.kop + curr.kop_forbis,
+                ops: acc.ops + curr.operasional,
+                shu: acc.shu + curr.shu,
+                p1: acc.p1 + curr.pekerja_a,
+                p2: acc.p2 + curr.pekerja_b,
+                p3: acc.p3 + curr.pekerja_c,
+                p4: acc.p4 + curr.pekerja_d,
+                dll: acc.dll + curr.dll
+            }), { laba: 0, zakat: 0, sisa: 0, cashback: 0, kop: 0, ops: 0, shu: 0, p1: 0, p2: 0, p3: 0, p4: 0, dll: 0 });
+
+            const totalRow = worksheet.getRow(currentRow);
+            totalRow.getCell(2).value = "TOTAL";
+            totalRow.getCell(3).value = totals.laba;
+            totalRow.getCell(4).value = totals.zakat;
+            totalRow.getCell(5).value = totals.sisa;
+            totalRow.getCell(6).value = totals.cashback;
+            totalRow.getCell(7).value = totals.kop;
+            totalRow.getCell(8).value = totals.ops;
+            totalRow.getCell(9).value = totals.shu;
+            totalRow.getCell(10).value = totals.p1;
+            totalRow.getCell(11).value = totals.p2;
+            totalRow.getCell(12).value = totals.p3;
+            totalRow.getCell(13).value = totals.p4;
+            totalRow.getCell(14).value = totals.dll;
+
+            for (let c = 1; c <= 14; c++) {
+                const cell = totalRow.getCell(c);
+                cell.border = borderStyle;
+                cell.font = { bold: true };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } };
+                if (c >= 3 && cell.value) cell.numFmt = '#,##0';
+            }
+            worksheet.columns = [
+                { width: 5 }, { width: 15 }, { width: 15 }, { width: 14 }, { width: 14 },
+                { width: 15 }, { width: 15 }, { width: 15 }, { width: 12 },
+                { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }
+            ];
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = `Rekap_Laba_${getFullPeriodeName()}.xlsx`;
+            anchor.click();
+            window.URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error(e);
+            alert('Gagal export rekap excel: ' + e);
+        }
+        setLoading(false);
+    };
+
+    const exportRekapToPDF = async () => {
+        setLoading(true);
+        try {
+            const { data, error } = await getAggregatedProfitData(startDate, endDate, activeTab);
+
+            if (error || !data) {
+                alert('Gagal mengambil data rekap: ' + error);
+                setLoading(false);
+                return;
+            }
+
+            const doc = new jsPDF('l', 'mm', 'a4');
+            const logoBase64 = await getLogoBase64();
+
+            const startY = applyPDFHeader(doc, `Rekap Laporan Pembagian Laba (${activeTab}): ${periodeName}`, logoBase64);
+
+            doc.setFontSize(10);
+            const subTitleY = startY;
+            doc.text(`Periode: ${startDate} s/d ${endDate}`, 14, subTitleY);
+
+            const tableColumn = [
+                "No", "Tanggal", "Total Laba", "Zakat", "Sisa", "Cashback", "Kop", "Ops", "SHU",
+                "Pekerja A", "Pekerja B", "Pekerja C", "Pekerja D", "DLL"
+            ];
+
+            const tableRows: any[] = [];
+            data.forEach((item, index) => {
+                tableRows.push([
+                    index + 1, item.tanggal,
+                    new Intl.NumberFormat('id-ID').format(item.laba),
+                    new Intl.NumberFormat('id-ID').format(item.zakat),
+                    new Intl.NumberFormat('id-ID').format(item.sisa),
+                    new Intl.NumberFormat('id-ID').format(item.cashback_dapur),
+                    new Intl.NumberFormat('id-ID').format(item.kop_forbis),
+                    new Intl.NumberFormat('id-ID').format(item.operasional),
+                    new Intl.NumberFormat('id-ID').format(item.shu),
+                    new Intl.NumberFormat('id-ID').format(item.pekerja_a),
+                    new Intl.NumberFormat('id-ID').format(item.pekerja_b),
+                    new Intl.NumberFormat('id-ID').format(item.pekerja_c),
+                    new Intl.NumberFormat('id-ID').format(item.pekerja_d),
+                    new Intl.NumberFormat('id-ID').format(item.dll),
+                ]);
+            });
+
+            const totals = data.reduce((acc, curr) => ({
+                laba: acc.laba + curr.laba,
+                zakat: acc.zakat + curr.zakat,
+                sisa: acc.sisa + curr.sisa,
+                cashback: acc.cashback + curr.cashback_dapur,
+                kop: acc.kop + curr.kop_forbis,
+                ops: acc.ops + curr.operasional,
+                shu: acc.shu + curr.shu,
+                p1: acc.p1 + curr.pekerja_a,
+                p2: acc.p2 + curr.pekerja_b,
+                p3: acc.p3 + curr.pekerja_c,
+                p4: acc.p4 + curr.pekerja_d,
+                dll: acc.dll + curr.dll
+            }), { laba: 0, zakat: 0, sisa: 0, cashback: 0, kop: 0, ops: 0, shu: 0, p1: 0, p2: 0, p3: 0, p4: 0, dll: 0 });
+
+            tableRows.push([
+                "", "TOTAL",
+                new Intl.NumberFormat('id-ID').format(totals.laba),
+                new Intl.NumberFormat('id-ID').format(totals.zakat),
+                new Intl.NumberFormat('id-ID').format(totals.sisa),
+                new Intl.NumberFormat('id-ID').format(totals.cashback),
+                new Intl.NumberFormat('id-ID').format(totals.kop),
+                new Intl.NumberFormat('id-ID').format(totals.ops),
+                new Intl.NumberFormat('id-ID').format(totals.shu),
+                new Intl.NumberFormat('id-ID').format(totals.p1),
+                new Intl.NumberFormat('id-ID').format(totals.p2),
+                new Intl.NumberFormat('id-ID').format(totals.p3),
+                new Intl.NumberFormat('id-ID').format(totals.p4),
+                new Intl.NumberFormat('id-ID').format(totals.dll),
+            ]);
+
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: startY + 10,
+                theme: 'grid',
+                styles: { fontSize: 7, cellPadding: 2, lineColor: [200, 200, 200], lineWidth: 0.1 },
+                headStyles: { fillColor: [22, 163, 74] },
+            });
+
+            doc.save(`Rekap_Laba_${getFullPeriodeName()}.pdf`);
+        } catch (e) {
+            console.error(e);
+            alert('Gagal export rekap PDF.');
+        }
+        setLoading(false);
+    };
+
     return (
         <div className="space-y-8">
             <div>
@@ -546,13 +807,20 @@ export default function ProfitPage() {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                        <DropdownMenuLabel>Pilih Format</DropdownMenuLabel>
-                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuLabel className="font-semibold px-2 py-1 text-xs text-muted-foreground uppercase">Detail (Per Produk)</DropdownMenuLabel>
                                                         <DropdownMenuItem onClick={exportToExcel}>
                                                             <FileDown className="mr-2 h-4 w-4" /> Export Excel (.xlsx)
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem onClick={exportToPDF}>
                                                             <FileText className="mr-2 h-4 w-4" /> Export PDF (.pdf)
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuLabel className="font-semibold px-2 py-1 text-xs text-muted-foreground uppercase">Rekap (Per Hari)</DropdownMenuLabel>
+                                                        <DropdownMenuItem onClick={exportRekapToExcel} className="font-medium text-primary">
+                                                            <FileDown className="mr-2 h-4 w-4" /> Export Rekap Excel
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={exportRekapToPDF} className="font-medium text-destructive">
+                                                            <FileText className="mr-2 h-4 w-4" /> Export Rekap PDF
                                                         </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>

@@ -287,3 +287,66 @@ export async function getDetailedProfitData(startDate: string, endDate: string, 
     return { data: detailedData };
 }
 
+export type AggregatedProfitItem = {
+    tanggal: string;
+    laba: number;
+    zakat: number;
+    sisa: number;
+    cashback_dapur: number;
+    kop_forbis: number;
+    operasional: number;
+    shu: number;
+    pekerja_a: number;
+    pekerja_b: number;
+    pekerja_c: number;
+    pekerja_d: number;
+    dll: number;
+};
+
+export async function getAggregatedProfitData(startDate: string, endDate: string, category?: 'Warung' | 'Dapur') {
+    const { data: detailedData, error } = await getDetailedProfitData(startDate, endDate, category);
+
+    if (error || !detailedData) return { error: error || 'Gagal mengambil data' };
+
+    // Group by Tanggal
+    const grouped = detailedData.reduce((acc: Record<string, AggregatedProfitItem>, curr) => {
+        const tgl = curr.tanggal;
+        if (!acc[tgl]) {
+            acc[tgl] = {
+                tanggal: tgl,
+                laba: 0,
+                zakat: 0,
+                sisa: 0,
+                cashback_dapur: 0,
+                kop_forbis: 0,
+                operasional: 0,
+                shu: 0,
+                pekerja_a: 0,
+                pekerja_b: 0,
+                pekerja_c: 0,
+                pekerja_d: 0,
+                dll: 0
+            };
+        }
+
+        acc[tgl].laba += curr.laba;
+        acc[tgl].zakat += curr.zakat;
+        acc[tgl].sisa += curr.sisa;
+        acc[tgl].cashback_dapur += curr.cashback_dapur;
+        acc[tgl].kop_forbis += curr.kop_forbis;
+        acc[tgl].operasional += curr.operasional;
+        acc[tgl].shu += curr.shu;
+        acc[tgl].pekerja_a += curr.pekerja_a;
+        acc[tgl].pekerja_b += curr.pekerja_b;
+        acc[tgl].pekerja_c += curr.pekerja_c;
+        acc[tgl].pekerja_d += curr.pekerja_d;
+        acc[tgl].dll += curr.dll;
+
+        return acc;
+    }, {});
+
+    // Convert to Array and sort by date
+    const result = Object.values(grouped).sort((a, b) => new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime());
+
+    return { data: result };
+}
