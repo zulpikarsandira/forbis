@@ -18,7 +18,6 @@ export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [loginRole, setLoginRole] = useState<LoginRole>('admin');
     const router = useRouter();
@@ -44,20 +43,14 @@ export default function LoginPage() {
                     await supabase.auth.signOut();
                     throw new Error('Akun ini bukan akun User. Gunakan login Admin.');
                 }
-                setIsSuccess(true);
-                setTimeout(() => {
-                    router.push('/user');
-                }, 3000);
+                router.push('/user');
             } else {
                 // admin: allow if role is 'admin' or not set (legacy)
                 if (role === 'user') {
                     await supabase.auth.signOut();
                     throw new Error('Akun ini bukan akun Admin. Gunakan login User.');
                 }
-                setIsSuccess(true);
-                setTimeout(() => {
-                    router.push('/dashboard');
-                }, 3000);
+                router.push('/dashboard');
             }
         } catch (err: any) {
             setError(err.message);
@@ -65,18 +58,6 @@ export default function LoginPage() {
             setLoading(false);
         }
     };
-
-    if (isSuccess) {
-        return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
-                <img
-                    src="/images/fcx.gif"
-                    alt="Loading..."
-                    className="w-32 h-32 object-contain"
-                />
-            </div>
-        );
-    }
 
     return (
         <div className="relative min-h-screen w-full overflow-hidden bg-white flex items-center justify-center">
@@ -188,7 +169,7 @@ export default function LoginPage() {
                             <Button
                                 type="submit"
                                 className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-blue-600 hover:to-primary transition-all duration-300 shadow-lg"
-                                disabled={loading || isSuccess}
+                                disabled={loading}
                             >
                                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 {loading ? 'Memproses...' : `Masuk sebagai ${loginRole === 'admin' ? 'Admin' : 'User'}`}
