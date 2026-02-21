@@ -141,11 +141,11 @@ export function ExportProductButton() {
 
                 const bodyData = exportData.map(item => template === 'lengkap'
                     ? [item['Kode'], item['Nama Barang'], item['Jenis'], item['Suplier'],
-                    new Intl.NumberFormat('id-ID').format(item['Harga Modal']),
-                    new Intl.NumberFormat('id-ID').format(item['Harga Jual']),
+                    `Rp ${new Intl.NumberFormat('id-ID').format(item['Harga Modal'])}`,
+                    `Rp ${new Intl.NumberFormat('id-ID').format(item['Harga Jual'])}`,
                     item['Stok']]
                     : [item['Kode'], item['Nama Barang'],
-                    new Intl.NumberFormat('id-ID').format(item['Harga Jual']),
+                    `Rp ${new Intl.NumberFormat('id-ID').format(item['Harga Jual'])}`,
                     item['Stok']]
                 );
 

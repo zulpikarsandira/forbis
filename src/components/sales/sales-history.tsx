@@ -120,14 +120,14 @@ async function exportPDFForKategori(data: Sale[], kategori: string, date: string
             sale.tanggal,
             sale.nama,
             sale.jumlah,
-            (sale.total_harga / sale.jumlah).toLocaleString('id-ID'),
-            sale.total_harga.toLocaleString('id-ID')
+            `Rp ${new Intl.NumberFormat('id-ID').format(sale.total_harga / sale.jumlah)}`,
+            `Rp ${new Intl.NumberFormat('id-ID').format(sale.total_harga)}`
         ]),
         foot: [[
             { content: 'TOTAL', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240], textColor: [0, 0, 0] } },
             { content: totalQtySum.toString(), styles: { halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240], textColor: [0, 0, 0] } },
             { content: '', styles: { fillColor: [240, 240, 240] } },
-            { content: `Rp ${totalSum.toLocaleString('id-ID')}`, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240], textColor: [0, 0, 0] } }
+            { content: `Rp ${new Intl.NumberFormat('id-ID').format(totalSum)}`, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240], textColor: [0, 0, 0] } }
         ]],
         theme: 'grid',
         headStyles: {

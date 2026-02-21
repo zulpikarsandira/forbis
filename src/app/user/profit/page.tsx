@@ -198,22 +198,25 @@ export default function UserProfitPage() {
             doc.text(`Periode: ${startDate} s/d ${endDate}`, 14, subTitleY);
 
             const tableColumn = ["No", "Tgl", "Barang", "Banyak", "Modal", "Jual", "Laba", "Zakat", "Sisa", "Cashback", "Kop", "Ops", "SHU", "Pekerja A", "Pekerja B", "Pekerja C", "Pekerja D", "DLL"];
+
+            const formatRp = (val: number) => `Rp ${new Intl.NumberFormat('id-ID').format(val)}`;
+
             const tableRows: any[] = data.map((item, i) => [
                 i + 1, item.tanggal, item.nama_barang, item.banyak,
-                new Intl.NumberFormat('id-ID').format(item.harga_suplier),
-                new Intl.NumberFormat('id-ID').format(item.harga_koperasi),
-                new Intl.NumberFormat('id-ID').format(item.laba),
-                new Intl.NumberFormat('id-ID').format(item.zakat),
-                new Intl.NumberFormat('id-ID').format(item.sisa),
-                new Intl.NumberFormat('id-ID').format(item.cashback_dapur),
-                new Intl.NumberFormat('id-ID').format(item.kop_forbis),
-                new Intl.NumberFormat('id-ID').format(item.operasional),
-                new Intl.NumberFormat('id-ID').format(item.shu),
-                new Intl.NumberFormat('id-ID').format(item.pekerja_a),
-                new Intl.NumberFormat('id-ID').format(item.pekerja_b),
-                new Intl.NumberFormat('id-ID').format(item.pekerja_c),
-                new Intl.NumberFormat('id-ID').format(item.pekerja_d),
-                new Intl.NumberFormat('id-ID').format(item.dll),
+                formatRp(item.harga_suplier),
+                formatRp(item.harga_koperasi),
+                formatRp(item.laba),
+                formatRp(item.zakat),
+                formatRp(item.sisa),
+                formatRp(item.cashback_dapur),
+                formatRp(item.kop_forbis),
+                formatRp(item.operasional),
+                formatRp(item.shu),
+                formatRp(item.pekerja_a),
+                formatRp(item.pekerja_b),
+                formatRp(item.pekerja_c),
+                formatRp(item.pekerja_d),
+                formatRp(item.dll),
             ]);
 
             const totals = data.reduce((acc, curr) => ({
@@ -225,18 +228,18 @@ export default function UserProfitPage() {
             }), { laba: 0, zakat: 0, sisa: 0, cashback: 0, kop: 0, ops: 0, shu: 0, p1: 0, p2: 0, p3: 0, p4: 0, dll: 0 });
 
             tableRows.push(["", "", "TOTAL", "", "", "",
-                new Intl.NumberFormat('id-ID').format(totals.laba),
-                new Intl.NumberFormat('id-ID').format(totals.zakat),
-                new Intl.NumberFormat('id-ID').format(totals.sisa),
-                new Intl.NumberFormat('id-ID').format(totals.cashback),
-                new Intl.NumberFormat('id-ID').format(totals.kop),
-                new Intl.NumberFormat('id-ID').format(totals.ops),
-                new Intl.NumberFormat('id-ID').format(totals.shu),
-                new Intl.NumberFormat('id-ID').format(totals.p1),
-                new Intl.NumberFormat('id-ID').format(totals.p2),
-                new Intl.NumberFormat('id-ID').format(totals.p3),
-                new Intl.NumberFormat('id-ID').format(totals.p4),
-                new Intl.NumberFormat('id-ID').format(totals.dll),
+                formatRp(totals.laba),
+                formatRp(totals.zakat),
+                formatRp(totals.sisa),
+                formatRp(totals.cashback),
+                formatRp(totals.kop),
+                formatRp(totals.ops),
+                formatRp(totals.shu),
+                formatRp(totals.p1),
+                formatRp(totals.p2),
+                formatRp(totals.p3),
+                formatRp(totals.p4),
+                formatRp(totals.dll),
             ]);
 
             autoTable(doc, {

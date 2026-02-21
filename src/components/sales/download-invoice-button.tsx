@@ -50,8 +50,8 @@ export function DownloadInvoiceButton({ sale }: DownloadInvoiceButtonProps) {
             doc.setFont("helvetica", "bold")
             doc.text(sale.nama, 5, 55)
             doc.setFont("helvetica", "normal")
-            doc.text(`${sale.jumlah} x Rp ${(sale.total_harga / sale.jumlah).toLocaleString('id-ID')}`, 5, 60)
-            doc.text(`Rp ${sale.total_harga.toLocaleString('id-ID')}`, 75, 60, { align: 'right' })
+            doc.text(`${sale.jumlah} x Rp ${new Intl.NumberFormat('id-ID').format(sale.total_harga / sale.jumlah)}`, 5, 60)
+            doc.text(`Rp ${new Intl.NumberFormat('id-ID').format(sale.total_harga)}`, 75, 60, { align: 'right' })
 
             doc.line(5, 65, 75, 65)
 
@@ -59,7 +59,7 @@ export function DownloadInvoiceButton({ sale }: DownloadInvoiceButtonProps) {
             doc.setFontSize(11)
             doc.setFont("helvetica", "bold")
             doc.text('TOTAL:', 5, 75)
-            doc.text(`Rp ${sale.total_harga.toLocaleString('id-ID')}`, 75, 75, { align: 'right' })
+            doc.text(`Rp ${new Intl.NumberFormat('id-ID').format(sale.total_harga)}`, 75, 75, { align: 'right' })
 
             // Footer
             doc.setFontSize(8)
