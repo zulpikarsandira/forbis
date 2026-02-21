@@ -168,11 +168,24 @@ export default function LoginPage() {
 
                             <Button
                                 type="submit"
-                                className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-blue-600 hover:to-primary transition-all duration-300 shadow-lg"
+                                className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-blue-600 hover:to-primary transition-all duration-300 shadow-lg relative h-11"
                                 disabled={loading}
                             >
-                                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                {loading ? 'Memproses...' : `Masuk sebagai ${loginRole === 'admin' ? 'Admin' : 'User'}`}
+                                {loading ? (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="relative w-16 h-16">
+                                            <Image
+                                                src="/images/WhatsApp Video 2026-02-21 at 15.38.31.gif"
+                                                alt="Loading..."
+                                                fill
+                                                className="object-contain"
+                                                unoptimized
+                                            />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <span>Masuk sebagai {loginRole === 'admin' ? 'Admin' : 'User'}</span>
+                                )}
                             </Button>
                         </form>
                     </CardContent>
