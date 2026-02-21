@@ -645,22 +645,26 @@ export default function ProfitPage() {
                 "Pekerja A", "Pekerja B", "Pekerja C", "Pekerja D", "DLL"
             ];
 
+            const formatRp = (value: number) => {
+                return `Rp ${new Intl.NumberFormat('id-ID').format(value)}`;
+            };
+
             const tableRows: any[] = [];
             data.forEach((item, index) => {
                 tableRows.push([
                     index + 1, item.tanggal,
-                    new Intl.NumberFormat('id-ID').format(item.laba),
-                    new Intl.NumberFormat('id-ID').format(item.zakat),
-                    new Intl.NumberFormat('id-ID').format(item.sisa),
-                    new Intl.NumberFormat('id-ID').format(item.cashback_dapur),
-                    new Intl.NumberFormat('id-ID').format(item.kop_forbis),
-                    new Intl.NumberFormat('id-ID').format(item.operasional),
-                    new Intl.NumberFormat('id-ID').format(item.shu),
-                    new Intl.NumberFormat('id-ID').format(item.pekerja_a),
-                    new Intl.NumberFormat('id-ID').format(item.pekerja_b),
-                    new Intl.NumberFormat('id-ID').format(item.pekerja_c),
-                    new Intl.NumberFormat('id-ID').format(item.pekerja_d),
-                    new Intl.NumberFormat('id-ID').format(item.dll),
+                    formatRp(item.laba),
+                    formatRp(item.zakat),
+                    formatRp(item.sisa),
+                    formatRp(item.cashback_dapur),
+                    formatRp(item.kop_forbis),
+                    formatRp(item.operasional),
+                    formatRp(item.shu),
+                    formatRp(item.pekerja_a),
+                    formatRp(item.pekerja_b),
+                    formatRp(item.pekerja_c),
+                    formatRp(item.pekerja_d),
+                    formatRp(item.dll),
                 ]);
             });
 
@@ -681,18 +685,18 @@ export default function ProfitPage() {
 
             tableRows.push([
                 "", "TOTAL",
-                new Intl.NumberFormat('id-ID').format(totals.laba),
-                new Intl.NumberFormat('id-ID').format(totals.zakat),
-                new Intl.NumberFormat('id-ID').format(totals.sisa),
-                new Intl.NumberFormat('id-ID').format(totals.cashback),
-                new Intl.NumberFormat('id-ID').format(totals.kop),
-                new Intl.NumberFormat('id-ID').format(totals.ops),
-                new Intl.NumberFormat('id-ID').format(totals.shu),
-                new Intl.NumberFormat('id-ID').format(totals.p1),
-                new Intl.NumberFormat('id-ID').format(totals.p2),
-                new Intl.NumberFormat('id-ID').format(totals.p3),
-                new Intl.NumberFormat('id-ID').format(totals.p4),
-                new Intl.NumberFormat('id-ID').format(totals.dll),
+                formatRp(totals.laba),
+                formatRp(totals.zakat),
+                formatRp(totals.sisa),
+                formatRp(totals.cashback),
+                formatRp(totals.kop),
+                formatRp(totals.ops),
+                formatRp(totals.shu),
+                formatRp(totals.p1),
+                formatRp(totals.p2),
+                formatRp(totals.p3),
+                formatRp(totals.p4),
+                formatRp(totals.dll),
             ]);
 
             autoTable(doc, {
