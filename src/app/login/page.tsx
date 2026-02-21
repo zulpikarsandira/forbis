@@ -18,6 +18,7 @@ export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [loginRole, setLoginRole] = useState<LoginRole>('admin');
     const router = useRouter();
@@ -43,14 +44,20 @@ export default function LoginPage() {
                     await supabase.auth.signOut();
                     throw new Error('Akun ini bukan akun User. Gunakan login Admin.');
                 }
-                router.push('/user');
+                setIsSuccess(true);
+                setTimeout(() => {
+                    router.push('/user');
+                }, 3000);
             } else {
                 // admin: allow if role is 'admin' or not set (legacy)
                 if (role === 'user') {
                     await supabase.auth.signOut();
                     throw new Error('Akun ini bukan akun Admin. Gunakan login User.');
                 }
-                router.push('/dashboard');
+                setIsSuccess(true);
+                setTimeout(() => {
+                    router.push('/dashboard');
+                }, 3000);
             }
         } catch (err: any) {
             setError(err.message);
@@ -58,6 +65,22 @@ export default function LoginPage() {
             setLoading(false);
         }
     };
+
+    if (isSuccess) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+                <div className="relative w-32 h-32">
+                    <Image
+                        src="/images/fcx.gif"
+                        alt="Loading..."
+                        fill
+                        className="object-contain"
+                        unoptimized
+                    />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="relative min-h-screen w-full overflow-hidden bg-white flex items-center justify-center">
@@ -168,24 +191,11 @@ export default function LoginPage() {
 
                             <Button
                                 type="submit"
-                                className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-blue-600 hover:to-primary transition-all duration-300 shadow-lg relative h-11"
-                                disabled={loading}
+                                className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-blue-600 hover:to-primary transition-all duration-300 shadow-lg"
+                                disabled={loading || isSuccess}
                             >
-                                {loading ? (
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="relative w-16 h-16">
-                                            <Image
-                                                src="/images/WhatsApp Video 2026-02-21 at 15.38.31.gif"
-                                                alt="Loading..."
-                                                fill
-                                                className="object-contain"
-                                                unoptimized
-                                            />
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <span>Masuk sebagai {loginRole === 'admin' ? 'Admin' : 'User'}</span>
-                                )}
+                                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {loading ? 'Memproses...' : `Masuk sebagai ${loginRole === 'admin' ? 'Admin' : 'User'}`}
                             </Button>
                         </form>
                     </CardContent>
