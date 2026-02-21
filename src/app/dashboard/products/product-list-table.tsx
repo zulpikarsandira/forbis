@@ -190,8 +190,8 @@ export default function ProductListTable({ products, currentPage, totalPages, to
             <div className="bg-card rounded-[2rem] shadow-sm border border-border overflow-hidden">
                 <div className="overflow-x-auto">
                     <Table className="min-w-[1000px]">
-                        <TableHeader className="bg-muted">
-                            <TableRow>
+                        <TableHeader className="bg-muted border-b border-border">
+                            <TableRow className="border-border">
                                 <TableHead className="w-[50px] text-center">
                                     <Checkbox
                                         checked={isAllPageSelected || isSelectAllMode}
@@ -218,7 +218,7 @@ export default function ProductListTable({ products, currentPage, totalPages, to
                                 </TableRow>
                             ) : (
                                 products.map((product, index) => (
-                                    <TableRow key={product.id} className={(selectedIds.includes(product.id) || isSelectAllMode) ? "bg-primary/10" : "hover:bg-muted/50 transition-colors"}>
+                                    <TableRow key={product.id} className={(selectedIds.includes(product.id) || isSelectAllMode) ? "bg-primary/10 border-border" : "hover:bg-muted/50 transition-colors border-border"}>
                                         <TableCell className="text-center">
                                             <Checkbox
                                                 checked={selectedIds.includes(product.id) || isSelectAllMode}
@@ -286,10 +286,11 @@ export default function ProductListTable({ products, currentPage, totalPages, to
                             size="sm"
                             disabled={currentPage === 1}
                             onClick={() => handlePageChange(currentPage - 1)}
+                            className="dark:text-foreground dark:border-border"
                         >
                             Previous
                         </Button>
-                        <div className="text-sm font-medium">
+                        <div className="text-sm font-medium text-foreground">
                             Page {currentPage} of {totalPages}
                         </div>
                         <Button
@@ -297,6 +298,7 @@ export default function ProductListTable({ products, currentPage, totalPages, to
                             size="sm"
                             disabled={currentPage === totalPages}
                             onClick={() => handlePageChange(currentPage + 1)}
+                            className="dark:text-foreground dark:border-border"
                         >
                             Next
                         </Button>
