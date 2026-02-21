@@ -20,7 +20,7 @@ interface SalesFormProps {
 
 export function SalesForm({ defaultKategori, onSuccess }: SalesFormProps) {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-    const [jumlah, setJumlah] = useState(1);
+    const [jumlah, setJumlah] = useState(0.1);
     const [hargaJual, setHargaJual] = useState(0);
     const [hargaBeli, setHargaBeli] = useState(0);
     const [date, setDate] = useState(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date()));
@@ -33,7 +33,7 @@ export function SalesForm({ defaultKategori, onSuccess }: SalesFormProps) {
         setSelectedProduct(product);
         setHargaJual(product.harga);
         setHargaBeli(product.modal);
-        setJumlah(1);
+        setJumlah(0.1);
         setError(null);
     };
 
@@ -64,7 +64,7 @@ export function SalesForm({ defaultKategori, onSuccess }: SalesFormProps) {
             setSuccess(true);
             // Reset form partly
             setSelectedProduct(null);
-            setJumlah(1);
+            setJumlah(0.1);
             setHargaJual(0);
 
             // Clear inputs if they're uncontrolled by state in a way that matters
@@ -168,7 +168,8 @@ export function SalesForm({ defaultKategori, onSuccess }: SalesFormProps) {
                                     type="number"
                                     value={jumlah}
                                     onChange={(e) => setJumlah(Number(e.target.value))}
-                                    min="1"
+                                    min="0.1"
+                                    step="0.1"
                                     max={selectedProduct.jumlah}
                                     className="text-center font-bold px-1"
                                 />
