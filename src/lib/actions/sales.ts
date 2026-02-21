@@ -93,18 +93,28 @@ export async function getHistoryDates() {
     const supabase = await createSupabaseServerClient();
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
 
+    // Fetch all records (including today) to compute full picture
     const { data, error } = await supabase
         .from('barang_laku')
         .select('tanggal, is_deleted')
-        .neq('tanggal', today) // Exclude today - today belongs to "Entry Hari Ini"
-        .order('tanggal', { ascending: false });
+        .order('tanggal', { ascending: true });
 
-    if (error) return { dates: [] };
+    if (error) return { dates: [], firstDate: null, todayHasData: false };
 
-    // Filter out deleted rows in app code, then get unique dates
+    // Filter out soft-deleted rows
     const active = data.filter(d => !d.is_deleted);
-    const uniqueDates = [...new Set(active.map(d => d.tanggal))] as string[];
-    return { dates: uniqueDates };
+
+    // Past dates with data (exclude today)
+    const pastActive = active.filter(d => d.tanggal !== today);
+    const uniqueDates = [...new Set(pastActive.map(d => d.tanggal))] as string[];
+
+    // Oldest date ever recorded (for determining the red-mark range)
+    const firstDate = active.length > 0 ? active[0].tanggal : null;
+
+    // Whether today already has any active entry
+    const todayHasData = active.some(d => d.tanggal === today);
+
+    return { dates: uniqueDates, firstDate, todayHasData };
 }
 
 // Get sales for a specific date (for history view)

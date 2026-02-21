@@ -154,18 +154,48 @@ export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
     const [showTrash, setShowTrash] = useState(false);
     const [loadingAction, setLoadingAction] = useState<number | null>(null);
     const [triggerFetch, setTriggerFetch] = useState(0);
-    const [historyDates, setHistoryDates] = useState<Date[]>([]);
+    const [datesWithData, setDatesWithData] = useState<Date[]>([]);   // 🟢 hijau
+    const [todayMark, setTodayMark] = useState<Date[]>([]);           // 🔵 biru
+    const [noDataDates, setNoDataDates] = useState<Date[]>([]);       // 🔴 merah
 
     // Fetch which dates have data, for calendar marking
     useEffect(() => {
         const loadDates = async () => {
             const res = await getHistoryDates();
-            if (res.dates) {
-                setHistoryDates(res.dates.map(d => {
-                    // Parse YYYY-MM-DD as local date (avoid UTC shift)
-                    const [y, m, day] = d.split('-').map(Number);
-                    return new Date(y, m - 1, day);
-                }));
+
+            // Helper: parse YYYY-MM-DD as local date (avoid UTC shift)
+            const parseLocal = (s: string) => {
+                const [y, m, d] = s.split('-').map(Number);
+                return new Date(y, m - 1, d);
+            };
+
+            // 🟢 Past dates with data
+            const withData = (res.dates ?? []).map(parseLocal);
+            setDatesWithData(withData);
+
+            // 🔵 Today marker
+            const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
+            setTodayMark(res.todayHasData ? [parseLocal(todayStr)] : []);
+
+            // 🔴 Past dates WITHOUT data (from firstDate up to yesterday)
+            if (res.firstDate) {
+                const withDataSet = new Set(res.dates ?? []);
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+
+                const noData: Date[] = [];
+                const cursor = parseLocal(res.firstDate);
+
+                while (cursor <= yesterday) {
+                    const key = cursor.toLocaleDateString('en-CA'); // YYYY-MM-DD local
+                    if (!withDataSet.has(key)) {
+                        noData.push(new Date(cursor));
+                    }
+                    cursor.setDate(cursor.getDate() + 1);
+                }
+                setNoDataDates(noData);
+            } else {
+                setNoDataDates([]);
             }
         };
         loadDates();
@@ -270,10 +300,14 @@ export function SalesHistory({ sales: initialSales }: SalesHistoryProps) {
                                     onSelect={(d) => d && setDate(d)}
                                     initialFocus
                                     modifiers={{
-                                        hasData: historyDates
+                                        hasData: datesWithData,
+                                        todayData: todayMark,
+                                        noData: noDataDates,
                                     }}
                                     modifiersClassNames={{
-                                        hasData: "rdp-day_hasData"
+                                        hasData: "rdp-day_hasData",
+                                        todayData: "rdp-day_todayData",
+                                        noData: "rdp-day_noData",
                                     }}
                                 />
                             </PopoverContent>
